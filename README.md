@@ -4,7 +4,7 @@ Micro-landing narrativa para el retiro juvenil JAR de la Parroquia Nuestra Seño
 
 ## Desarrollo
 
-Node 22 o superior.
+Node 22.x, igual que en CI y Vercel.
 
 ```sh
 npm ci
@@ -41,7 +41,9 @@ La landing funciona aunque esos campos falten; no muestra testimonios ficticios 
 
 ## Vercel Hobby
 
-Importar `fb91/casiciaco` en Vercel, framework Next.js, raíz del proyecto `/`, build `npm run build`, instalación `npm ci`. No hace falta configurar un directorio de salida ni backend. Primero desplegar la rama/PR como preview; seleccionar `main` como rama de producción tras revisar y fusionar.
+Importar `fb91/casiciaco` en Vercel con **Root Directory `./`** (la carpeta que contiene `package.json`). El archivo `vercel.json` fija el framework **Next.js**, la instalación `npm ci`, el build `npm run build` y la salida `.next`, y tiene prioridad sobre esos ajustes del panel. `package.json` fija Node **22.x**. No hace falta un backend adicional. Primero desplegar la rama/PR como preview; seleccionar `main` como rama de producción tras revisar y fusionar.
+
+Si un despliegue muestra `404 NOT_FOUND` en `/` pero sirve `/images/forest.webp`, revisar **Settings → Build and Deployment**: el preset debe ser **Next.js**, no **Other**, y la salida no debe ser `public`. Esa carpeta solo contiene imágenes; la portada se genera al compilar Next.js. En los logs debe aparecer `npm run build` / `next build` y la ruta `/` en el resumen de páginas. Después de subir esta configuración, desplegar el nuevo commit; volver a desplegar un commit anterior no incorpora el archivo `vercel.json`.
 
 Variables:
 

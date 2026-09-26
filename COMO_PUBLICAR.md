@@ -4,7 +4,7 @@ Implementación terminada y validada. GitHub rechazó la creación de ramas y bl
 
 ## Ejecutar
 
-Descomprimí este archivo y ejecutá `npm ci` y `npm run dev` con Node 22 o superior. Las capturas están en `docs/` y los datos editables en `src/config/retreat.ts`.
+Descomprimí este archivo y ejecutá `npm ci` y `npm run dev` con Node 22.x. Las capturas están en `docs/` y los datos editables en `src/config/retreat.ts`.
 
 ## Publicar el commit original
 
