@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { retreat } from "@/config/retreat";
 export const alt =
-  "CASICIACO 45 — Date lugar. 13, 14 y 15 de noviembre de 2026. De 18 a 30 años.";
+  "CASICIACO 45 — Date lugar. 13, 14 y 15 de noviembre de 2026. De 16 a 30 años.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export default function Image() {

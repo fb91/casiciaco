@@ -25,7 +25,7 @@ test("mobile narrative is navigable, has no overflow and ends in an honest invit
     "estará disponible",
   );
   await page.locator(".practical summary").click();
-  await expect(page.locator(".practical")).toContainText("De 18 a 30 años");
+  await expect(page.locator(".practical")).toContainText("De 16 a 30 años");
   expect(errors).toEqual([]);
 });
 
@@ -114,6 +114,6 @@ test("content and invitation remain available without JavaScript", async ({
   await page.goto("http://127.0.0.1:3000");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.locator(".practical summary").click();
-  await expect(page.locator(".practical")).toContainText("De 18 a 30 años");
+  await expect(page.locator(".practical")).toContainText("De 16 a 30 años");
   await context.close();
 });
