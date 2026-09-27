@@ -239,6 +239,68 @@ test("canceling native share opens nothing else", async ({ page }) => {
   await expect(page.getByRole("status")).toHaveText("");
 });
 
+test("the noise grows with the notifications and goes to zero when holding for silence", async ({
+  page,
+}) => {
+  // Record every volume target the soundscape sends to its gain nodes.
+  await page.addInitScript(() => {
+    const log: number[] = [];
+    (window as unknown as { gains: number[] }).gains = log;
+    const create = AudioContext.prototype.createGain;
+    AudioContext.prototype.createGain = function (this: AudioContext) {
+      const node = create.call(this);
+      const set = node.gain.setTargetAtTime.bind(node.gain);
+      node.gain.setTargetAtTime = (value: number, at: number, time: number) => {
+        log.push(value);
+        return set(value, at, time);
+      };
+      return node;
+    };
+  });
+  const gains = () =>
+    page.evaluate(() => (window as unknown as { gains: number[] }).gains);
+  const clear = () =>
+    page.evaluate(() => {
+      (window as unknown as { gains: number[] }).gains.length = 0;
+    });
+  // 0.9 is the master volume; the rest are the noise layers.
+  const loudest = async () =>
+    Math.max(0, ...(await gains()).filter((value) => value !== 0.9));
+  await page.goto("/");
+  await page.locator(".hero-title").click();
+  await expect(page.locator(".sound-toggle")).toHaveText(/^Sonido$/);
+  await page.waitForTimeout(300);
+  const calmStart = await loudest();
+  await clear();
+  await page.locator("#ruido").evaluate((el: HTMLElement) =>
+    scrollTo({
+      top: el.offsetTop + el.offsetHeight - innerHeight,
+      behavior: "instant",
+    }),
+  );
+  await expect.poll(loudest).toBeGreaterThan(calmStart + 0.2);
+  await page.locator("#silencio").scrollIntoViewIfNeeded();
+  const ring = page.getByRole("button", { name: retreat.copy.hold });
+  const box = (await ring.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(300);
+  await clear();
+  await page.waitForTimeout(800);
+  // Only the master volume may stay up; every sound layer is sent to zero.
+  const whileHolding = (await gains()).filter((value) => value !== 0.9);
+  expect(whileHolding.length).toBeGreaterThan(0);
+  expect(whileHolding.every((value) => value === 0)).toBe(true);
+  await expect(page.locator("#agustin")).toBeVisible({ timeout: 6000 });
+  await page.mouse.up();
+  await clear();
+  await page.mouse.wheel(0, 1500);
+  await page.waitForTimeout(800);
+  expect(
+    (await gains()).filter((value) => value !== 0.9).every((v) => v === 0),
+  ).toBe(true);
+});
+
 test("sound starts on, plays after the first gesture and remembers being turned off", async ({
   page,
 }) => {

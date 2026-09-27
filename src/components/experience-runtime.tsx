@@ -29,6 +29,7 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
     const themed = [...root.querySelectorAll<HTMLElement>("[data-theme]")];
     const marquees = [...root.querySelectorAll<HTMLElement>("[data-marquee]")];
     const noise = root.querySelector<HTMLElement>("#ruido");
+    const silence = root.querySelector<HTMLElement>("#silencio");
     const heart = root.querySelector<HTMLElement>("[data-heart]");
     const heartScene = root.querySelector<HTMLElement>("#corazon");
     const timeline = root.querySelector<HTMLElement>("[data-timeline]");
@@ -122,28 +123,26 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
         const count = Math.floor(p * (notifications + 1.5));
         if (count > shown && visible.has(noise)) soundscape.ping();
         shown = count;
-        if (visible.has(noise)) noiseLevel = 0.25 + 0.75 * p;
+        // Louder, brighter and buzzier as the notifications pile up (and when scrolling fast).
+        if (visible.has(noise))
+          noiseLevel = Math.min(1, 0.3 + 0.7 * p ** 1.3 + velocity * 0.08);
       }
       const state = storyState.get();
       if (!state.silenced && y < vh * 0.8)
-        noiseLevel = Math.max(noiseLevel, 0.15);
-      // Holding for silence means real silence: every layer goes quiet at once.
-      if (!state.silenced && live.hold > 0) soundscape.setMix(0, 0, true);
-      else
-        soundscape.setMix(
-          state.silenced ? 0 : noiseLevel,
-          state.silenced ? 1 : 0,
-        );
+        noiseLevel = Math.max(noiseLevel, 0.2);
+      // The noise stays on while the question waits, until the visitor holds.
+      if (silence && visible.has(silence))
+        noiseLevel = Math.max(noiseLevel, 0.85);
+      // Holding, and everything after the silence, is real silence: volume zero.
+      if (state.silenced || live.hold > 0) soundscape.setLevel(0, true);
+      else soundscape.setLevel(noiseLevel);
 
       // Restless heart that slows down as the quote completes.
       if (heart && heartScene && visible.has(heartScene)) {
         const p = Number(heartScene.dataset.p || 0);
         const bpm = 118 - 66 * p;
         beatPhase += (bpm / 60) * dt;
-        if (beatPhase >= 1) {
-          beatPhase -= 1;
-          soundscape.beat(1 - p * 0.5);
-        }
+        if (beatPhase >= 1) beatPhase -= 1;
         // "Lub-dub": a strong beat followed by a softer echo.
         const echo =
           beatPhase > 0.2 ? 0.6 * Math.exp(-(beatPhase - 0.2) * 11) : 0;
@@ -154,6 +153,7 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       const animating =
         (!reduced && marquees.some((marquee) => visible.has(marquee))) ||
         (heartScene && visible.has(heartScene)) ||
+        (silence && visible.has(silence)) ||
         velocity > 0.01;
       if (animating) frame = requestAnimationFrame(tick);
     };
@@ -174,7 +174,7 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       },
       { rootMargin: "10% 0px" },
     );
-    [...marquees, noise, heartScene].forEach(
+    [...marquees, noise, silence, heartScene].forEach(
       (element) => element && observer.observe(element),
     );
 
@@ -278,7 +278,13 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       if (storyState.get().sound && !soundscape.running) soundscape.enable();
     };
     unlock();
-    const events = ["pointerdown", "keydown", "touchend", "click"] as const;
+    const events = [
+      "pointerdown",
+      "pointerup",
+      "keydown",
+      "touchend",
+      "click",
+    ] as const;
     events.forEach((name) =>
       window.addEventListener(name, unlock, { capture: true, passive: true }),
     );

@@ -1,17 +1,19 @@
 "use client";
 
 /**
- * Procedural, opt-in soundscape (no audio files): city-like noise that fades into a calm pad.
- * Created on the first user gesture so browsers allow playback.
+ * Procedural soundscape (no audio files): the noise of a busy day that grows with the
+ * notifications and disappears completely once the visitor holds for silence.
+ * After the silence there is no sound at all.
  */
 type Engine = {
   context: AudioContext;
   master: GainNode;
   noise: GainNode;
-  calm: GainNode;
+  harsh: GainNode;
+  band: BiquadFilterNode;
 };
 let engine: Engine | null = null;
-let mix = { noise: 0, calm: 0 };
+let level = 0;
 let on = false;
 let listener: (running: boolean) => void = () => {};
 
@@ -21,6 +23,10 @@ function build(): Engine | null {
     (window as unknown as { webkitAudioContext?: typeof AudioContext })
       .webkitAudioContext;
   if (!Context) return null;
+  // iOS: play through the speaker even with the silent switch on (Safari 16.4+).
+  const session = (navigator as { audioSession?: { type: string } })
+    .audioSession;
+  if (session) session.type = "playback";
   const context = new Context();
   context.onstatechange = () => listener(context.state === "running");
   const master = context.createGain();
@@ -54,30 +60,30 @@ function build(): Engine | null {
   source.start();
   wander.start();
 
-  // A warm A-major pad that breathes slowly.
-  const calm = context.createGain();
-  calm.gain.value = 0;
-  const low = context.createBiquadFilter();
-  low.type = "lowpass";
-  low.frequency.value = 900;
-  low.connect(calm).connect(master);
-  [110, 164.81, 220, 277.18, 329.63].forEach((frequency, index) => {
+  // An irritating electric buzz with a nervous tremolo: it only appears as the day piles up.
+  const harsh = context.createGain();
+  harsh.gain.value = 0;
+  const edge = context.createBiquadFilter();
+  edge.type = "bandpass";
+  edge.frequency.value = 1900;
+  edge.Q.value = 1.4;
+  const tremolo = context.createGain();
+  tremolo.gain.value = 0.5;
+  const shake = context.createOscillator();
+  const shakeDepth = context.createGain();
+  shake.frequency.value = 9;
+  shakeDepth.gain.value = 0.5;
+  shake.connect(shakeDepth).connect(tremolo.gain);
+  [111, 117.5, 223].forEach((frequency) => {
     const oscillator = context.createOscillator();
-    const voice = context.createGain();
-    oscillator.type = index % 2 ? "sine" : "triangle";
+    oscillator.type = "sawtooth";
     oscillator.frequency.value = frequency;
-    oscillator.detune.value = (index - 2) * 4;
-    voice.gain.value = 0.09 / (index + 1);
-    const breath = context.createOscillator();
-    const breathDepth = context.createGain();
-    breath.frequency.value = 0.07 + index * 0.013;
-    breathDepth.gain.value = voice.gain.value * 0.6;
-    breath.connect(breathDepth).connect(voice.gain);
-    oscillator.connect(voice).connect(low);
+    oscillator.connect(edge);
     oscillator.start();
-    breath.start();
   });
-  return { context, master, noise, calm };
+  edge.connect(tremolo).connect(harsh).connect(master);
+  shake.start();
+  return { context, master, noise, harsh, band };
 }
 
 function envelope(
@@ -107,9 +113,15 @@ export const soundscape = {
     engine ||= build();
     if (!engine) return false;
     on = true;
-    void engine.context.resume();
-    engine.master.gain.setTargetAtTime(0.9, engine.context.currentTime, 0.4);
-    this.setMix(mix.noise, mix.calm);
+    const { context } = engine;
+    // Older iOS only unlocks audio if something plays inside the gesture.
+    const blank = context.createBufferSource();
+    blank.buffer = context.createBuffer(1, 1, context.sampleRate);
+    blank.connect(context.destination);
+    blank.start();
+    void context.resume();
+    engine.master.gain.setTargetAtTime(0.9, context.currentTime, 0.2);
+    this.setLevel(level);
     return true;
   },
   disable() {
@@ -130,38 +142,32 @@ export const soundscape = {
     return !!engine && engine.context.state === "running";
   },
   get active() {
-    return on && !!engine;
+    return on && !!engine && level > 0;
   },
-  /** 0..1 levels for the restless noise and the calm pad; `immediate` cuts in ~0.2 s. */
-  setMix(noise: number, calm: number, immediate = false) {
-    mix = { noise, calm };
+  /**
+   * 0..1 intensity of the noise. Low: a murmur. High: louder, brighter and buzzing.
+   * 0 is total silence; `immediate` cuts it in a fraction of a second.
+   */
+  setLevel(value: number, immediate = false) {
+    level = value;
     if (!engine) return;
     const now = engine.context.currentTime;
-    engine.noise.gain.setTargetAtTime(
-      noise * 0.55,
+    const time = immediate ? 0.03 : 0.2;
+    engine.noise.gain.setTargetAtTime(value * 0.75, now, time);
+    engine.harsh.gain.setTargetAtTime(
+      Math.max(0, value - 0.35) ** 2 * 0.5,
       now,
-      immediate ? 0.05 : 0.25,
+      time,
     );
-    engine.calm.gain.setTargetAtTime(calm * 0.8, now, immediate ? 0.05 : 0.8);
+    engine.band.Q.setTargetAtTime(0.7 + value * 2.5, now, time);
   },
-  /** A notification blip. */
+  /** A notification: chime plus a phone buzz, louder as the noise grows. */
   ping() {
     if (!this.active) return;
+    const loud = 0.4 + level * 0.8;
     const base = 1200 + Math.random() * 500;
-    envelope(base, 0.05, 0.14);
-    envelope(base * 1.5, 0.04, 0.18, "sine", 0.07);
-  },
-  /** A soft heartbeat thump. */
-  beat(strength = 1) {
-    if (!this.active) return;
-    envelope(62, 0.22 * strength, 0.22);
-    envelope(55, 0.14 * strength, 0.24, "sine", 0.17);
-  },
-  /** A bright chime when the silence opens. */
-  chime() {
-    if (!this.active) return;
-    [659.25, 880, 1108.73].forEach((frequency, index) =>
-      envelope(frequency, 0.06, 2.4, "sine", index * 0.12),
-    );
+    envelope(base, 0.07 * loud, 0.16);
+    envelope(base * 1.5, 0.06 * loud, 0.2, "sine", 0.08);
+    envelope(170, 0.05 * loud, 0.32, "square", 0.02);
   },
 };

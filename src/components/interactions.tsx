@@ -80,7 +80,7 @@ export function HoldToSilence() {
     paint(1);
     live.hold = 0;
     navigator.vibrate?.([18, 80, 18]);
-    soundscape.chime();
+    soundscape.setLevel(0, true);
     storyState.openSilence();
     track(skipped ? "silence_skip" : "silence_complete");
     setTimeout(() => pause.current?.focus({ preventScroll: true }), 60);
@@ -89,6 +89,8 @@ export function HoldToSilence() {
     if (silenced || held.current) return;
     held.current = true;
     setHolding(true);
+    // Real silence from the first instant of holding.
+    soundscape.setLevel(0, true);
     navigator.vibrate?.(12);
     const from = timer.current.value;
     timer.current.start = performance.now() - from * holdDuration;
