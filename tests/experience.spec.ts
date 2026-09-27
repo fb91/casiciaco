@@ -307,9 +307,10 @@ test("sound starts on, plays after the first gesture and remembers being turned 
   await page.goto("/");
   const toggle = page.locator(".sound-toggle");
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
-  await page.locator(".hero-title").click();
+  // "Tocá para empezar" starts the story and the sound with the same tap.
+  await page.getByRole("link", { name: /Tocá para empezar/ }).click();
   await expect(toggle).toHaveText(/^Sonido$/);
-  await expect(page.locator(".sound-hint")).toHaveCount(0);
+  await expect(page.locator("#ruido")).toBeInViewport();
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   await expect(toggle).toHaveText("Activar sonido");

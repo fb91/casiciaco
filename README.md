@@ -41,7 +41,7 @@ Una sola página que se scrollea como un relato, del ruido a la calma:
 
 Para promocionar desde la parroquia, conviene mandar directamente `casiciaco.vercel.app/#compartir`.
 
-Sonido activado por defecto: paisaje sonoro generado con Web Audio, sin archivos. Un murmullo en la portada que se vuelve más fuerte, brillante y con un zumbido molesto a medida que se apilan las notificaciones (cada una suena con campanita y vibración). Sigue mientras espera el silencio y va a volumen cero en el instante en que se mantiene apretado; desde ahí la experiencia queda en silencio total. Los navegadores solo dejan que suene después del primer toque o tecla, así que hasta entonces la portada muestra «Tocá para activar el sonido». Quien lo apaga lo mantiene apagado en sus próximas visitas.
+Sonido activado por defecto: paisaje sonoro generado con Web Audio, sin archivos. Un murmullo en la portada que se vuelve más fuerte, brillante y con un zumbido molesto a medida que se apilan las notificaciones (cada una suena con campanita y vibración). Sigue mientras espera el silencio y va a volumen cero en el instante en que se mantiene apretado; desde ahí la experiencia queda en silencio total. Los navegadores solo dejan que suene después del primer toque o tecla, la portada tiene el botón «Tocá para empezar», que baja al ruido e inicia el sonido en el mismo toque. Quien lo apaga lo mantiene apagado en sus próximas visitas.
 
 `Anotarme` queda fijo en el header después de la portada. Sin JavaScript, todo el relato se lee como una página común. Con movimiento reducido no hay escenas fijadas, ni cintas en movimiento, ni desplazamientos horizontales.
 

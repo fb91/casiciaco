@@ -191,15 +191,19 @@ export function HoldToSilence() {
   );
 }
 
-/** Hero hint while the browser waits for a first gesture before playing sound. */
-export function SoundHint() {
-  const waiting = useStory((state) => state.sound && !state.audible);
-  if (!waiting) return null;
+/**
+ * Hero call to action: starts the story (goes to the noise) and, with the same tap,
+ * starts the sound if the browser had not let it play yet.
+ */
+export function StartButton() {
   return (
-    <button
-      type="button"
-      className="sound-hint"
-      onClick={() => soundscape.enable()}
+    <a
+      className="start-button"
+      href="#ruido"
+      onClick={() => {
+        const { sound } = storyState.get();
+        if (sound && !soundscape.running) soundscape.enable();
+      }}
     >
       <span className="sound-bars" aria-hidden="true">
         <i />
@@ -207,8 +211,9 @@ export function SoundHint() {
         <i />
         <i />
       </span>
-      Tocá para activar el sonido
-    </button>
+      Tocá para empezar
+      <Arrow />
+    </a>
   );
 }
 

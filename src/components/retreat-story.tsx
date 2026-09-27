@@ -10,7 +10,7 @@ import {
   InvitationLine,
   PracticalDetails,
   ShareStudio,
-  SoundHint,
+  StartButton,
   TestimonialGallery,
 } from "@/components/interactions";
 import { Arrow } from "@/components/marks";
@@ -119,7 +119,7 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
             {retreat.age.max}. <strong>13—15 de noviembre.</strong>
           </p>
           <Countdown compact />
-          <SoundHint />
+          <StartButton />
         </div>
         <a className="scroll-hint" href="#ruido">
           <span>Deslizá</span>
