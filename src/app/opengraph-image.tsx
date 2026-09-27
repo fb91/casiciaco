@@ -1,10 +1,24 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { retreat } from "@/config/retreat";
-export const alt =
-  "CASICIACO 45 — Date lugar. 13, 14 y 15 de noviembre de 2026. De 16 a 30 años.";
+export const alt = `CASICIACO ${retreat.edition} — Date lugar. ${retreat.dates.days} de noviembre de ${retreat.dates.year}. De ${retreat.age.min} a ${retreat.age.max} años.`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export default function Image() {
+export default async function Image() {
+  const serif = await readFile(
+    join(
+      process.cwd(),
+      "node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff",
+    ),
+  );
+  // Use the sans font already bundled with next/og; no external font requests.
+  const sans = await readFile(
+    join(
+      process.cwd(),
+      "node_modules/next/dist/compiled/@vercel/og/Geist-Regular.ttf",
+    ),
+  );
   return new ImageResponse(
     <div
       style={{
@@ -13,10 +27,10 @@ export default function Image() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        background: "#12384a",
-        color: "#f5f1e7",
+        background: "#17251e",
+        color: "#f2f0e7",
         padding: "55px 70px",
-        fontFamily: "sans-serif",
+        fontFamily: "Geist",
       }}
     >
       <div
@@ -34,18 +48,30 @@ export default function Image() {
         style={{
           display: "flex",
           fontSize: 146,
-          fontWeight: 700,
-          letterSpacing: -10,
+          alignItems: "baseline",
+          fontWeight: 400,
+          letterSpacing: -8,
         }}
       >
-        Date <span style={{ color: "#efc45b", marginLeft: 30 }}>lugar.</span>
+        Date{" "}
+        <span
+          style={{
+            color: "#d5ebaa",
+            marginLeft: 30,
+            fontFamily: "Instrument",
+            fontStyle: "italic",
+            fontSize: 195,
+          }}
+        >
+          lugar.
+        </span>
       </div>
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           fontSize: 27,
-          borderTop: "2px solid #efc45b",
+          borderTop: "1px solid #d5ebaa",
           paddingTop: 28,
         }}
       >
@@ -57,6 +83,12 @@ export default function Image() {
         </span>
       </div>
     </div>,
-    size,
+    {
+      ...size,
+      fonts: [
+        { name: "Geist", data: sans, weight: 400, style: "normal" },
+        { name: "Instrument", data: serif, weight: 400, style: "italic" },
+      ],
+    },
   );
 }

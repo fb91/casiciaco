@@ -6,6 +6,11 @@ import { Arrow } from "./marks";
 
 export function Choice() {
   const [selected, setSelected] = useState<string | null>(null);
+  const responses = [
+    "A veces, hacer una pausa es una buena forma de empezar.",
+    "Hay búsquedas que se viven mejor en compañía.",
+    "No tener una respuesta también puede ser un comienzo.",
+  ];
   return (
     <div
       className="choices"
@@ -27,6 +32,15 @@ export function Choice() {
           </span>
         </button>
       ))}
+      <p className="choice-response" aria-live="polite">
+        {selected
+          ? responses[
+              retreat.copy.choice.options.indexOf(
+                selected as (typeof retreat.copy.choice.options)[number],
+              )
+            ]
+          : "Elegí lo que hoy te resuene. Podés cambiar de idea."}
+      </p>
     </div>
   );
 }

@@ -21,11 +21,11 @@ npx playwright install chromium
 npm test
 ```
 
-Next.js App Router + TypeScript + Tailwind. Página prerenderizada; sin backend, DB, login ni CMS. Fuentes locales, fotografías WebP locales, ilustración SVG original, scroll nativo y CSS scroll-snap proximity. No contiene librerías de animación ni embeds de redes sociales.
+Next.js App Router + TypeScript + Tailwind. Página prerenderizada; sin backend, DB, login ni CMS. Fuentes e imágenes WebP locales. Ocho capítulos con scroll nativo, composiciones sticky, parallax y botones anterior/siguiente. No intercepta gestos ni necesita librerías de animación o embeds de redes sociales.
 
 ## Editar contenido
 
-`src/config/retreat.ts` centraliza el copy, fechas, edad, organizadores, datos prácticos, enlaces, testimonios y aprobaciones. Los datos desconocidos son `null` con TODO. No editar el JSX para cargar información del retiro.
+`src/config/retreat.ts` centraliza fechas, edad, organizadores, datos prácticos, enlaces, testimonios, opciones y aprobaciones. Los datos desconocidos son `null` con TODO. La narrativa y composición de cada capítulo se encuentran en `src/app/page.tsx`; su movimiento, en `experience-runtime.tsx` y `globals.css`.
 
 Antes de lanzar la campaña:
 
@@ -33,11 +33,11 @@ Antes de lanzar la campaña:
 - [ ] Sede, precio, horarios, traslado/pernocte y contacto oficial.
 - [ ] Aprobar las tres respuestas rápidas: `questions[].approved = true`.
 - [ ] Cargar de 3 a 5 testimonios reales y autorizados. Cada uno requiere `name`, `video`, `poster`, `captions` (VTT), `transcript`, `approved: true`. Se ocultan hasta estar completos.
-- [ ] Reemplazar o complementar las fotografías ambientales con material real autorizado. No presentar las fotos de bosque como sede del retiro.
+- [ ] Complementar las imágenes conceptuales con material real autorizado. No presentar las imágenes generadas como sede del retiro ni fotos de participantes.
 - [ ] ID de Clarity y URL canónica definitiva.
 - [ ] Confirmar destino de los QR del flyer; actualizarlo a la landing si corresponde.
 
-La landing funciona aunque esos campos falten; no muestra testimonios ficticios ni respuestas sin aprobar. Los números de escena mantienen la narrativa original de 15 escenas; los bloques 13 y 14 se publican cuando tengan contenido aprobado.
+La landing funciona aunque esos campos falten; no muestra testimonios ficticios ni respuestas sin aprobar. Los ocho capítulos públicos van desde la búsqueda personal hasta la invitación. La navegación incorpora automáticamente testimonios y preguntas cuando se aprueban.
 
 ## Vercel Hobby
 
@@ -50,7 +50,7 @@ Variables:
 - `NEXT_PUBLIC_SITE_URL`: URL HTTPS canónica real, sin parámetros.
 - `NEXT_PUBLIC_CLARITY_PROJECT_ID`: ID real de Microsoft Clarity.
 
-Redeploy después de cambiar variables `NEXT_PUBLIC_*`. Sin URL canónica las previews quedan en `noindex`. La imagen social se genera con `next/og` a partir de la configuración. No hay Vercel Analytics.
+Redeploy después de cambiar variables `NEXT_PUBLIC_*`. Producción usa `https://casiciaco.vercel.app` como URL canónica por defecto; `NEXT_PUBLIC_SITE_URL` permite configurar un dominio propio. Las previews sin URL canónica quedan en `noindex`. La imagen social se genera con `next/og` a partir de la configuración y apunta al dominio público de producción. No hay Vercel Analytics.
 
 ## Clarity / Smart Events
 
@@ -67,7 +67,7 @@ En Clarity: Settings → Smart events para revisar los API events; el SDK se car
 - Flujo principal de aproximadamente 60–90 segundos, sin tiempos forzados; testimonios opcionales.
 - Un solo scroll, anchors accesibles, `min-height` adaptable y nunca bloqueo de gestos.
 - Texto esencial visible sin JavaScript. Los enlaces y el detalle práctico siguen funcionando.
-- Reduced motion elimina animaciones y scroll-snap; foco visible y controles con targets de al menos 44 px.
+- Reduced motion elimina animaciones, parallax y fijación de escenas; foco visible y controles con targets de al menos 44 px.
 - Videos con controles, subtítulos y transcripción; se cargan solo cerca de ellos, se pausan al salir de pantalla y no se reproducen simultáneamente.
 - Compartir con Web Share; si no existe/falla, WhatsApp y portapapeles. Cancelar Web Share no abre otras aplicaciones.
 - Sin música ni video automático de fondo.
@@ -78,17 +78,19 @@ En Clarity: Settings → Smart events para revisar los API events; el SDK se car
 - _Confesiones_, IX, 3–4: https://www.augustinus.it/spagnolo/confessioni/conf_09_libro.htm
 - Biografía / audiencia del 9 de enero de 2008: https://www.vatican.va/content/benedict-xvi/es/audiences/2008/documents/hf_ben-xvi_aud_20080109.html
 
-La estancia de Casiciaco fue posterior a la conversión y anterior al bautismo. No se atribuye la redacción de _Confesiones_ a esa estancia. La ilustración es editorial, no una reconstrucción histórica.
+La estancia de Casiciaco fue posterior a la conversión y anterior al bautismo. No se atribuye la redacción de _Confesiones_ a esa estancia. El retrato de Agustín y la villa son recreaciones artísticas, no reconstrucciones históricas verificadas.
 
 ## Assets
 
-Fotografías ambientales de Unsplash, alojadas localmente y optimizadas a WebP:
+Imágenes actuales creadas con la herramienta integrada ImageGen y optimizadas a WebP (aproximadamente 650 KiB entre las cuatro; Next.js entrega tamaños adaptados): `journey.webp`, `augustine.webp`, `cassiciacum.webp`, `encounter.webp`. Dirección visual, naturaleza conceptual y prompts completos en [docs/visual-direction.md](docs/visual-direction.md).
+
+Fotografías de Unsplash conservadas de la versión anterior, actualmente sin uso:
 
 - https://images.unsplash.com/photo-1441974231531-c6227db76b6e (bosque y sendero)
 - https://images.unsplash.com/photo-1448375240586-882707db888b (luz en el bosque)
 - Licencia: https://unsplash.com/license
 
-No representan participantes ni la sede real. SVG editorial de Agustín y ornamentos creados para este proyecto. Manrope e Instrument Serif se sirven localmente vía Fontsource; sus licencias acompañan los paquetes.
+No representan participantes ni la sede real. El antiguo SVG de Agustín fue reemplazado por un retrato cinematográfico. Manrope e Instrument Serif se sirven localmente vía Fontsource; sus licencias acompañan los paquetes.
 
 ## Vista previa y validación
 

@@ -8,7 +8,7 @@ export type Testimonial = {
   approved: boolean;
 };
 
-/** The single editorial source. Null = not supplied; never fabricate logistics. */
+/** Event information and approved content. Null = not supplied; never fabricate logistics. */
 export const retreat = {
   name: "CASICIACO",
   edition: 45,
@@ -36,7 +36,11 @@ export const retreat = {
   registrationUrl: null as string | null,
   contactUrl: null as string | null,
   registrationNote: "La información para anotarte estará disponible acá.",
-  canonicalUrl: process.env.NEXT_PUBLIC_SITE_URL || null,
+  canonicalUrl:
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_ENV === "production"
+      ? "https://casiciaco.vercel.app"
+      : null),
   analytics: {
     provider: "clarity",
     projectId: process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || null,

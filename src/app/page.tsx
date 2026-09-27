@@ -7,484 +7,489 @@ import {
   InvitationActions,
   TestimonialGallery,
 } from "@/components/interactions";
-import { Arrow, AugustineArt, Scribble, Spark } from "@/components/marks";
-const c = retreat.copy;
+import { Arrow } from "@/components/marks";
+
 function Scene({
   id,
-  n,
-  className,
   chapter,
-  light = false,
+  className = "",
   children,
 }: {
   id: string;
-  n: string;
-  className: string;
   chapter: string;
-  light?: boolean;
+  className?: string;
   children: ReactNode;
 }) {
   return (
     <section
       id={id}
-      className={`scene ${className}`}
+      className={"scene " + className}
       data-scene
       data-chapter={chapter}
-      data-tone={light ? "light" : "dark"}
-      aria-labelledby={`${id}-title`}
+      aria-labelledby={id + "-title"}
     >
-      <span className="scene-index" aria-hidden="true">
-        {n} / LA INQUIETUD
-      </span>
       {children}
     </section>
   );
 }
-function Next({ to, text = "Seguí bajando" }: { to: string; text?: string }) {
+function Chapter({
+  number,
+  children,
+}: {
+  number: string;
+  children: ReactNode;
+}) {
   return (
-    <a className="next-scene" href={`#${to}`}>
-      <span>{text}</span>
+    <p className="chapter-label">
+      <span>{number}</span>
+      <span className="chapter-line" />
+      {children}
+    </p>
+  );
+}
+function Continue({
+  to,
+  children = "Seguí el recorrido",
+}: {
+  to: string;
+  children?: ReactNode;
+}) {
+  return (
+    <a className="continue-link" href={"#" + to}>
+      {children}
       <Arrow />
     </a>
   );
 }
-function Kicker({ children }: { children: ReactNode }) {
-  return <p className="kicker">{children}</p>;
-}
+
 export default function Home() {
   const videos = approvedTestimonials();
-  const questions = retreat.questions.filter((q) => q.approved);
+  const questions = retreat.questions.filter((question) => question.approved);
   const contact = publicUrl(retreat.contactUrl);
   return (
     <>
       <ExperienceRuntime />
       <main>
-        <Scene id="inicio" n="01" className="hero" chapter="LA INQUIETUD">
-          <div className="hero-photo">
-            <Image
-              src="/images/forest.webp"
-              alt=""
-              fill
-              priority
-              sizes="(min-width: 900px) 55vw, 100vw"
-            />
+        <Scene id="inicio" chapter="La inquietud" className="hero scene-pinned">
+          <div className="scene-panel hero-panel">
+            <div className="scene-media hero-media">
+              <Image
+                src="/images/journey.webp"
+                alt=""
+                fill
+                preload
+                sizes="(max-width: 899px) 180vh, 100vw"
+                quality={85}
+              />
+            </div>
+            <div className="hero-shade" />
+            <div className="hero-topline">
+              <span>UN RETIRO. UN NUEVO COMIENZO.</span>
+              <span>ROSARIO, ARGENTINA</span>
+            </div>
+            <div className="hero-copy">
+              <p className="eyebrow">
+                CASICIACO #{retreat.edition} · RETIRO CATÓLICO JUVENIL
+              </p>
+              <h1 id="inicio-title">
+                <span>¿Qué estás</span>
+                <em>buscando?</em>
+              </h1>
+              <p className="hero-description">
+                A veces, para encontrarte,
+                <br />
+                tenés que hacer una pausa.
+              </p>
+              <Continue to="ruido">Empezá el recorrido</Continue>
+            </div>
+            <div className="hero-bottom">
+              <span>13—15 NOVIEMBRE 2026</span>
+              <span>
+                DESLIZÁ PARA DESCUBRIR
+                <span className="scroll-line" />
+              </span>
+            </div>
+            <span className="hero-side-note" aria-hidden="true">
+              UN POCO MENOS DE RUIDO. UN POCO MÁS DE VOS.
+            </span>
           </div>
-          <div className="hero-orbit" aria-hidden="true" />
-          <div className="hero-content">
-            <Kicker>Un encuentro. Muchas preguntas.</Kicker>
-            <h1 id="inicio-title">
-              <span>{c.opening[0]}</span>
-              <em>{c.opening[1]}</em>
-            </h1>
-            <Scribble />
-            <p className="hero-note">
-              Quizás el camino
-              <br />
-              empieza por acá.
-            </p>
-          </div>
-          <Spark className="hero-spark" />
-          <div className="hero-edition" aria-hidden="true">
-            <span>EDICIÓN</span>
-            <strong>45</strong>
-          </div>
-          <Next to="ruido" />
-          <p className="hero-date">
-            {retreat.dates.days} NOV / {retreat.dates.year}
-          </p>
         </Scene>
+
         <Scene
           id="ruido"
-          n="02"
-          className="noise"
-          chapter="TODO A LA VEZ"
-          light
+          chapter="Bajar el ruido"
+          className="noise scene-pinned"
         >
-          <h2 id="ruido-title" className="sr-only">
-            Todo lo que estás buscando
-          </h2>
-          <div className="noise-words" aria-hidden="true">
-            {c.noise.map((word, i) => (
-              <span key={word} className={`noise-word word-${i}`}>
-                {word}
-              </span>
-            ))}
+          <div className="scene-panel noise-panel">
+            <Chapter number="02">TODO PASA. TODO EL TIEMPO.</Chapter>
+            <div className="noise-field" aria-hidden="true">
+              <div className="noise-row row-one">
+                <span>Estudiar.</span>
+                <em>El futuro.</em>
+                <span>Trabajar.</span>
+                <span>Estudiar.</span>
+              </div>
+              <div className="noise-row row-two">
+                <em>Salir.</em>
+                <span>La próxima cosa.</span>
+                <em>Encajar.</em>
+              </div>
+            </div>
+            <div className="noise-center">
+              <span className="tiny-orbit" aria-hidden="true" />
+              <h2 id="ruido-title">
+                Todo allá afuera.
+                <br />
+                <em>¿Y adentro?</em>
+              </h2>
+              <p>
+                Hay preguntas que no se responden scrolleando.
+                <br className="desktop-break" /> Quizás sea momento de
+                escucharlas.
+              </p>
+            </div>
+            <Continue to="agustin">No sos el primero en preguntártelo</Continue>
           </div>
-          <p className="sr-only">{c.noise.join(" ")}</p>
-          <div className="noise-anchor">
-            <Spark />
-            <p>{c.noiseEnd}</p>
-            <Scribble />
-          </div>
-          <Next to="pausa" text="Y en medio de todo…" />
         </Scene>
-        <Scene
-          id="pausa"
-          n="03"
-          className="pause"
-          chapter="BAJAR EL RUIDO"
-          light
-        >
-          <span className="small-sun" aria-hidden="true" />
-          <div className="center-copy">
-            <p className="prelude">{c.pause[0]}</p>
-            <h2 id="pausa-title">
-              {c.pause[1].split(" ")[0]}
-              <br />
-              <em>{c.pause[1].split(" ")[1]}</em>
-            </h2>
-          </div>
-          <div className="horizon" aria-hidden="true" />
-          <Next to="preguntas" />
-        </Scene>
-        <Scene
-          id="preguntas"
-          n="04"
-          className="questions-scene"
-          chapter="HACER UNA PAUSA"
-        >
-          <div className="photo-backdrop">
-            <Image src="/images/light.webp" alt="" fill sizes="100vw" />
-          </div>
-          <div className="center-copy">
-            <Kicker>Un momento para vos</Kicker>
-            <h2 id="preguntas-title">
-              {c.scrolling[0]}
-              <br />
-              <span className="plain-line">{c.scrolling[1]}</span>
-              <br />
-              <em>{c.scrolling[2]}</em>
-            </h2>
-          </div>
-          <Next to="agustin" />
-        </Scene>
+
         <Scene
           id="agustin"
-          n="05"
-          className="augustine"
-          chapter="NO SOS EL PRIMERO"
-          light
+          chapter="Una búsqueda compartida"
+          className="augustine scene-pinned"
         >
-          <div className="augustine-copy">
-            <Kicker>{c.augustine[0]}</Kicker>
-            <h2 id="agustin-title">
-              {c.augustine[1]}
-              <br />
-              <em>{c.augustine[2]}</em>
-            </h2>
+          <div className="scene-panel augustine-panel">
+            <div className="augustine-portrait scene-media">
+              <Image
+                src="/images/augustine.webp"
+                alt="Recreación artística de un joven Agustín junto a una ventana, mirando hacia la luz"
+                fill
+                sizes="(min-width: 900px) 60vw, 100vw"
+                quality={85}
+              />
+            </div>
+            <div className="portrait-shade" />
+            <div className="augustine-copy">
+              <Chapter number="03">UNA INQUIETUD DE 1600 AÑOS.</Chapter>
+              <h2 id="agustin-title">
+                Él también
+                <br />
+                quería <em>más.</em>
+              </h2>
+              <p>
+                Agustín estudió. Enseñó. Cambió de ideas.
+                <br />
+                Tenía preguntas. Y siguió buscando.
+              </p>
+              <p className="augustine-emphasis">Hasta que se animó a parar.</p>
+              <Continue to="casiciaco">Un lugar cambió la historia</Continue>
+            </div>
+            <p className="portrait-caption">
+              AGUSTÍN DE HIPONA <span>RECREACIÓN ARTÍSTICA</span>
+            </p>
+            <span className="year-watermark" aria-hidden="true">
+              386
+            </span>
           </div>
-          <AugustineArt />
-          <span className="art-note" aria-hidden="true">
-            Una inquietud que atraviesa el tiempo.
-          </span>
-          <Next to="busqueda" />
         </Scene>
-        <Scene
-          id="busqueda"
-          n="06"
-          className="biography"
-          chapter="SEGUIR BUSCANDO"
-          light
-        >
-          <h2 id="busqueda-title" className="sr-only">
-            El camino de Agustín
-          </h2>
-          <ol className="bio-lines">
-            {c.journey.map((line, i) => (
-              <li key={line}>
-                <span className="bio-number">0{i + 1}</span>
-                <span>{line}</span>
-                {i === 3 && <Scribble />}
-              </li>
-            ))}
-          </ol>
-          <Next to="casiciaco" />
-        </Scene>
+
         <Scene
           id="casiciaco"
-          n="07"
-          className="name-reveal"
-          chapter="UN LUGAR PARA ENCONTRARSE"
+          chapter="Un lugar para encontrarse"
+          className="reveal scene-pinned"
         >
-          <div className="photo-backdrop">
-            <Image src="/images/forest.webp" alt="" fill sizes="100vw" />
+          <div className="scene-panel reveal-panel">
+            <div className="scene-media retreat-media">
+              <Image
+                src="/images/cassiciacum.webp"
+                alt=""
+                fill
+                sizes="(max-width: 899px) 180vh, 100vw"
+                quality={85}
+              />
+            </div>
+            <div className="reveal-shade" />
+            <Chapter number="04">HAY LUGARES QUE SON UN COMIENZO.</Chapter>
+            <div className="reveal-copy">
+              <p>
+                Después de su conversión, se retiró al campo
+                <br />
+                con familiares y amigos. A un lugar llamado…
+              </p>
+              <h2 id="casiciaco-title">
+                Casiciaco<span>.</span>
+              </h2>
+              <figure>
+                <blockquote>
+                  “Nuestro corazón está <em>inquieto</em>
+                  <br />
+                  hasta que descanse en ti.”
+                </blockquote>
+                <figcaption>SAN AGUSTÍN · CONFESIONES, I, 1, 1</figcaption>
+              </figure>
+            </div>
+            <Continue to="vos">Ahora, la pregunta es tuya</Continue>
           </div>
-          <div className="name-intro">
-            <p>
-              {c.cassiciacum[0]}
-              <br />
-              {c.cassiciacum[1]}
-              <br />
-              {c.cassiciacum[2]}
-            </p>
-            <p className="kicker">{c.cassiciacum[3]}</p>
-          </div>
-          <div className="name-lockup">
-            <Spark />
-            <h2 id="casiciaco-title">
-              CASI<span>CIACO.</span>
-            </h2>
-            <Scribble />
-          </div>
-          <Next to="corazon" />
         </Scene>
-        <Scene
-          id="corazon"
-          n="08"
-          className="quote-scene"
-          chapter="EL CORAZÓN INQUIETO"
-          light
-        >
-          <span className="quote-mark" aria-hidden="true">
-            “
-          </span>
-          <h2 id="corazon-title" className="sr-only">
-            El corazón inquieto
-          </h2>
-          <figure>
-            <blockquote>
-              {c.quote.split("inquieto")[0]}
-              <em>inquieto</em>
-              {c.quote.split("inquieto")[1]}
-            </blockquote>
-            <figcaption>
-              San Agustín<span>Confesiones, I, 1, 1</span>
-            </figcaption>
-          </figure>
-          <Spark />
-          <Next to="vos" />
-        </Scene>
-        <Scene
-          id="vos"
-          n="09"
-          className="choice-scene"
-          chapter="TU PROPIA BÚSQUEDA"
-          light
-        >
-          <div className="choice-intro">
-            <Kicker>La pregunta sigue abierta.</Kicker>
-            <h2 id="vos-title">
-              ¿Y <em>vos?</em>
-            </h2>
-            <p>{c.choice.question}</p>
+
+        <Scene id="vos" chapter="Tu propia búsqueda" className="choice-scene">
+          <div className="scene-panel choice-panel">
+            <Chapter number="05">NO HAY UNA RESPUESTA CORRECTA.</Chapter>
+            <div className="choice-layout">
+              <div className="choice-intro">
+                <p className="eyebrow">UN MOMENTO PARA VOS</p>
+                <h2 id="vos-title">
+                  ¿Y <em>vos?</em>
+                </h2>
+                <p>¿Qué te gustaría encontrar?</p>
+                <span className="choice-orbit" aria-hidden="true" />
+              </div>
+              <Choice />
+            </div>
+            <Continue to="tres-dias">Hacé espacio para algo nuevo</Continue>
           </div>
-          <Choice />
-          <Next to="tres-dias" />
         </Scene>
+
         <Scene
           id="tres-dias"
-          n="10"
-          className="room-scene"
-          chapter="HACER LUGAR"
-          light
+          chapter="Hacer lugar"
+          className="moments-scene scene-pinned"
         >
-          <div className="room-top">
-            <Kicker>Una invitación a parar</Kicker>
-            <h2 id="tres-dias-title">
-              {c.room[0]}
-              <br />
-              {c.room[1].replace("lugar.", "")}
-              <br />
-              <em>lugar.</em>
-            </h2>
-          </div>
-          <div className="moments">
-            {c.moments.map((line, i) => (
-              <p key={line}>
-                <span aria-hidden="true">{["↗", "✳", "↗"][i]}</span>
-                {line}
+          <div className="scene-panel moments-panel">
+            <Chapter number="06">SALIR DE LO DE SIEMPRE.</Chapter>
+            <div className="moments-heading">
+              <h2 id="tres-dias-title">
+                Tres días.
+                <br />
+                <em>Hacé lugar.</em>
+              </h2>
+              <p>
+                No necesitás tener todo resuelto.
+                <br />
+                Podés empezar por estar.
               </p>
-            ))}
+            </div>
+            <div className="moment-cards">
+              <div className="moment-card moment-one">
+                <span className="moment-number">01 / CONVERSAR</span>
+                <p>
+                  A una
+                  <br />
+                  <em>charla.</em>
+                </p>
+                <div className="card-lines" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </div>
+              </div>
+              <div className="moment-card moment-two">
+                <span className="moment-number">02 / ENCONTRARSE</span>
+                <p>
+                  A <em>otros.</em>
+                </p>
+                <div className="card-orbits" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </div>
+              </div>
+              <div className="moment-card moment-three">
+                <span className="moment-number">03 / ESCUCHARSE</span>
+                <p>
+                  A tus
+                  <br />
+                  <em>preguntas.</em>
+                </p>
+                <span className="card-question" aria-hidden="true">
+                  ?
+                </span>
+              </div>
+            </div>
+            <Continue to="jesus">Y a un encuentro más profundo</Continue>
           </div>
-          <div className="room-rings" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </div>
-          <Next to="jesus" />
         </Scene>
-        <Scene id="jesus" n="11" className="jesus-scene" chapter="UN ENCUENTRO">
-          <div className="cross-art" aria-hidden="true">
-            <i />
-            <b />
-          </div>
-          <div className="jesus-copy">
-            <h2 id="jesus-title">
-              {c.jesus[0]}
-              <br />
-              <em>{c.jesus[1]}</em>
-            </h2>
-            <p>{c.description}</p>
-          </div>
-          <Next to="fecha" />
-        </Scene>
+
         <Scene
-          id="fecha"
-          n="12"
-          className="date-scene"
-          chapter="RESERVATE ESTOS DÍAS"
-          light
+          id="jesus"
+          chapter="Un encuentro"
+          className="jesus-scene scene-pinned"
         >
-          <Kicker>CASICIACO #{retreat.edition}</Kicker>
-          <h2 id="fecha-title" className="date-heading">
-            {retreat.dates.days.split(" · ").map((day, i) => (
-              <span key={day}>
-                {day}
-                {i === 2 && <Spark />}
-              </span>
-            ))}
-          </h2>
-          <div className="date-month">
-            <strong>{retreat.dates.month}</strong>
-            <span>{retreat.dates.year}</span>
+          <div className="scene-panel jesus-panel">
+            <div className="scene-media encounter-media">
+              <Image
+                src="/images/encounter.webp"
+                alt=""
+                fill
+                sizes="(max-width: 899px) 180vh, 100vw"
+                quality={85}
+              />
+            </div>
+            <div className="encounter-shade" />
+            <Chapter number="07">EL CENTRO DE ESTA INVITACIÓN.</Chapter>
+            <div className="jesus-copy">
+              <p className="eyebrow">
+                HAY ALGUIEN QUE QUIERE ENCONTRARSE CON VOS.
+              </p>
+              <h2 id="jesus-title">
+                Y a conocer
+                <br />
+                <em>a Jesús.</em>
+              </h2>
+              <p>
+                Casiciaco es un retiro católico juvenil.
+                <br />
+                Un espacio para la fe, las preguntas y el encuentro.
+              </p>
+              <Continue
+                to={
+                  videos.length
+                    ? "voces"
+                    : questions.length
+                      ? "dudas"
+                      : "invitacion"
+                }
+              >
+                Esta es tu invitación
+              </Continue>
+            </div>
           </div>
-          <p className="age-line">
-            DE {retreat.age.min} A {retreat.age.max} AÑOS
-          </p>
-          <div className="organizer">
-            <span className="jar-mark">
-              JAR<span>↗</span>
-            </span>
-            <p>
-              {retreat.organization.name}
-              <br />
-              {retreat.organization.order}
-              <br />
-              {retreat.organization.parish}
-              <br />
-              {retreat.organization.city}
-            </p>
-          </div>
-          <Next
-            to={
-              videos.length
-                ? "voces"
-                : questions.length
-                  ? "dudas"
-                  : "invitacion"
-            }
-            text="Date lugar"
-          />
         </Scene>
+
         {videos.length > 0 && (
-          <Scene
-            id="voces"
-            n="13"
-            className="voices-scene"
-            chapter="OTRAS VOCES"
-            light
-          >
-            <Kicker>En primera persona</Kicker>
-            <h2 id="voces-title">
-              Ellos ya
-              <br />
-              lo <em>vivieron.</em>
-            </h2>
-            <TestimonialGallery items={videos} />
+          <Scene id="voces" chapter="Otras voces" className="voices-scene">
+            <div className="scene-panel content-panel">
+              <p className="eyebrow">EN PRIMERA PERSONA</p>
+              <h2 id="voces-title">
+                Ellos ya
+                <br />
+                <em>lo vivieron.</em>
+              </h2>
+              <TestimonialGallery items={videos} />
+            </div>
           </Scene>
         )}
         {questions.length > 0 && (
-          <Scene
-            id="dudas"
-            n="14"
-            className="doubts-scene"
-            chapter="PODÉS PREGUNTAR"
-            light
-          >
-            <Kicker>Sin vueltas</Kicker>
-            <h2 id="dudas-title">
-              ¿Será
-              <br />
-              para <em>mí?</em>
-            </h2>
-            <div className="quick-questions">
-              {questions.map((q) => (
-                <details key={q.question}>
-                  <summary>
-                    {q.question}
-                    <span aria-hidden="true">+</span>
-                  </summary>
-                  <p>{q.answer}</p>
-                </details>
-              ))}
+          <Scene id="dudas" chapter="Podés preguntar" className="doubts-scene">
+            <div className="scene-panel content-panel">
+              <p className="eyebrow">SIN VUELTAS</p>
+              <h2 id="dudas-title">
+                También hay lugar
+                <br />
+                <em>para tus dudas.</em>
+              </h2>
+              <div className="quick-questions">
+                {questions.map((question) => (
+                  <details key={question.question}>
+                    <summary>
+                      {question.question}
+                      <span aria-hidden="true">+</span>
+                    </summary>
+                    <p>{question.answer}</p>
+                  </details>
+                ))}
+              </div>
+              <Continue to="invitacion">Date lugar</Continue>
             </div>
-            <Next to="invitacion" />
           </Scene>
         )}
+
         <Scene
           id="invitacion"
-          n="15"
+          chapter="El camino empieza acá"
           className="invitation"
-          chapter="EL CAMINO EMPIEZA ACÁ"
         >
-          <div className="invitation-top">
-            <Kicker>CASICIACO #{retreat.edition}</Kicker>
-            <h2 id="invitacion-title">
-              {c.invitation[0]}
-              <br />
-              <em>{c.invitation[1]}</em>
-            </h2>
-            <Spark />
-            <Scribble />
-          </div>
-          <p className="final-date">
-            {retreat.dates.days} NOVIEMBRE {retreat.dates.year}
-            <span>
-              De {retreat.age.min} a {retreat.age.max} años
-            </span>
-          </p>
-          <InvitationActions />
-          <details className="practical">
-            <summary>
-              Información práctica <span aria-hidden="true">+</span>
-            </summary>
-            <dl>
-              <div>
-                <dt>Fecha</dt>
-                <dd>
-                  {retreat.dates.days} de noviembre de {retreat.dates.year}
-                </dd>
+          <div className="scene-panel invitation-panel">
+            <Chapter number="08">
+              CASICIACO #{retreat.edition} · JAR · ROSARIO
+            </Chapter>
+            <div className="invitation-layout">
+              <div className="invitation-title">
+                <p className="eyebrow">EL PRIMER PASO PUEDE SER ESTE.</p>
+                <h2 id="invitacion-title">
+                  Date
+                  <br />
+                  <em>lugar.</em>
+                </h2>
+                <p>
+                  Tres días para hacer una pausa.
+                  <br />Y abrirte a lo que viene.
+                </p>
               </div>
-              <div>
-                <dt>Edad</dt>
-                <dd>
-                  De {retreat.age.min} a {retreat.age.max} años
-                </dd>
+              <div className="invitation-details">
+                <div className="date-lockup">
+                  <span>13—15</span>
+                  <div>
+                    <strong>NOVIEMBRE</strong>
+                    <span>2026</span>
+                  </div>
+                </div>
+                <p className="age-line">
+                  De {retreat.age.min} a {retreat.age.max} años <span>·</span>{" "}
+                  Retiro católico juvenil
+                </p>
+                <InvitationActions />
+                <details className="practical">
+                  <summary>
+                    Lo que necesitás saber<span aria-hidden="true">+</span>
+                  </summary>
+                  <dl>
+                    <div>
+                      <dt>Fecha</dt>
+                      <dd>
+                        {retreat.dates.days} de noviembre de{" "}
+                        {retreat.dates.year}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Edad</dt>
+                      <dd>
+                        De {retreat.age.min} a {retreat.age.max} años
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Lugar</dt>
+                      <dd>
+                        {retreat.venue || "A confirmar por la organización."}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Costo</dt>
+                      <dd>
+                        {retreat.price || "A confirmar por la organización."}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Horarios</dt>
+                      <dd>
+                        {retreat.schedule || "A confirmar por la organización."}
+                      </dd>
+                    </div>
+                  </dl>
+                  {retreat.practicalNotes && <p>{retreat.practicalNotes}</p>}
+                  {contact && (
+                    <a className="text-button" href={contact}>
+                      Consultar a JAR
+                      <Arrow direction="up-right" />
+                    </a>
+                  )}
+                </details>
               </div>
-              <div>
-                <dt>Lugar</dt>
-                <dd>{retreat.venue || "A confirmar por la organización."}</dd>
+            </div>
+            <footer>
+              <div className="footer-brand">
+                CASICIACO<span> / 45</span>
               </div>
-              <div>
-                <dt>Costo</dt>
-                <dd>{retreat.price || "A confirmar por la organización."}</dd>
-              </div>
-              <div>
-                <dt>Horarios</dt>
-                <dd>
-                  {retreat.schedule || "A confirmar por la organización."}
-                </dd>
-              </div>
-            </dl>
-            {retreat.practicalNotes && <p>{retreat.practicalNotes}</p>}
-            {contact && (
-              <a className="text-button" href={contact}>
-                Consultar a JAR <Arrow direction="up-right" />
+              <p>
+                {retreat.organization.name}
+                <br />
+                {retreat.organization.parish} · {retreat.organization.city}
+              </p>
+              <a href="#inicio">
+                Volver al comienzo
+                <Arrow direction="up-right" />
               </a>
-            )}
-          </details>
-          <footer>
-            <p>
-              JAR · {retreat.organization.order}
-              <br />
-              {retreat.organization.parish}
-              <br />
-              {retreat.organization.city}
-            </p>
-            <a href="#inicio">
-              Volver al comienzo <Arrow direction="up-right" />
-            </a>
-          </footer>
+            </footer>
+          </div>
         </Scene>
       </main>
     </>
