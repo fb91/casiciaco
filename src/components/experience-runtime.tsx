@@ -18,6 +18,7 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [pastHero, setPastHero] = useState(false);
   const sound = useStory((state) => state.sound);
+  const audible = useStory((state) => state.audible);
   const registration = publicUrl(retreat.registrationUrl);
 
   useEffect(() => {
@@ -283,10 +284,32 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Sound starts on: browsers only let it play after the first tap or key press,
+  // so every such gesture unlocks it until it is actually audible.
+  useEffect(() => {
+    soundscape.listen((running) => storyState.setAudible(running));
+    const unlock = () => {
+      if (storyState.get().sound && !soundscape.running) soundscape.enable();
+    };
+    unlock();
+    const events = ["pointerdown", "keydown", "touchend", "click"] as const;
+    events.forEach((name) =>
+      window.addEventListener(name, unlock, { capture: true, passive: true }),
+    );
+    return () =>
+      events.forEach((name) =>
+        window.removeEventListener(name, unlock, { capture: true }),
+      );
+  }, []);
+
   function toggleSound() {
-    if (sound) {
+    // While waiting for the first gesture, this very tap is the one that turns it on.
+    if (sound && !audible) {
+      soundscape.enable();
+    } else if (sound) {
       soundscape.disable();
       storyState.setSound(false);
+      track("sound_off");
     } else if (soundscape.enable()) {
       storyState.setSound(true);
       track("sound_on");
@@ -308,7 +331,9 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
         <div className="header-actions">
           <button
             type="button"
-            className="sound-toggle"
+            className={
+              "sound-toggle" + (sound && !audible ? " is-waiting" : "")
+            }
             aria-pressed={sound}
             onClick={toggleSound}
           >
@@ -318,7 +343,13 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
               <i />
               <i />
             </span>
-            <span>{sound ? "Sonido" : "Con sonido"}</span>
+            <span>
+              {!sound
+                ? "Activar sonido"
+                : audible
+                  ? "Sonido"
+                  : "Tocá para escuchar"}
+            </span>
           </button>
           {registration && (
             <a

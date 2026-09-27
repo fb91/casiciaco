@@ -21,6 +21,8 @@ export type SmartEvent =
   | "silence_skip"
   | "choice"
   | "sound_on"
+  | "sound_off"
+  | "copy_message"
   | "registration_click"
   | "registration_info"
   | "share_open"

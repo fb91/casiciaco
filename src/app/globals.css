@@ -264,6 +264,17 @@ summary:focus-visible {
   height: 12px;
   animation-delay: -0.15s !important;
 }
+.sound-toggle.is-waiting {
+  animation: call 1.6s ease-in-out infinite;
+}
+@keyframes call {
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, currentColor 18%, transparent);
+  }
+}
+.sound-toggle.is-waiting .sound-bars i {
+  animation: none;
+}
 .sound-toggle[aria-pressed="false"] .sound-bars {
   opacity: 0.55;
 }
@@ -502,6 +513,20 @@ html[data-enhanced] .rise.is-in .rise-word {
   font-weight: 400;
   font-size: 54px;
   line-height: 1;
+}
+.sound-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 14px;
+  font-weight: 750;
+  animation: hero-in 1s 0.8s var(--ease) both;
 }
 .scroll-hint {
   position: absolute;
@@ -1446,30 +1471,10 @@ html[data-enhanced] .encounter {
   font-size: 16px;
   font-weight: 750;
 }
-.share-panel {
-  display: grid;
-  gap: 14px;
-  margin-top: 14px;
-}
-.share-block {
-  padding: 22px;
-  border-radius: 20px;
-  background: var(--sage);
-}
-.share-block:first-child {
-  background: var(--night);
-  color: var(--paper);
-}
 .share-title {
   font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.02em;
-}
-.share-copy {
-  margin-top: 6px;
-  font-size: 14px;
-  line-height: 1.55;
-  opacity: 0.85;
 }
 .text-button {
   display: inline-flex;
@@ -1492,26 +1497,6 @@ html[data-enhanced] .encounter {
 }
 .invite-label span {
   opacity: 0.85;
-}
-.invite-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-  margin-top: 8px;
-}
-.invite-row input {
-  flex: 1 1 160px;
-  min-height: 48px;
-  padding: 10px 14px;
-  border: 1.5px solid var(--ink);
-  border-radius: 12px;
-  background: var(--paper);
-  color: var(--ink);
-  font-size: 16px;
-}
-.invite-row .text-button {
-  margin-top: 0;
 }
 .practical:last-child {
   border-bottom: 1.5px solid #24483e40;
@@ -1569,6 +1554,164 @@ html[data-enhanced] .encounter {
   .invitation-footer {
     grid-column: 1 / -1;
   }
+}
+
+/* ---------- 11 · Share ---------- */
+.share-scene {
+  display: grid;
+  gap: 48px;
+  padding: 120px var(--gutter) 40px;
+  background: var(--sand);
+}
+.share-heading h2 {
+  font-size: clamp(42px, 6vw, 88px);
+}
+.share-heading h2 .rise-line:last-child {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent-ink);
+}
+.share-studio {
+  display: grid;
+  gap: 18px;
+  max-width: 820px;
+}
+.share-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: #24483e14;
+}
+.share-modes button {
+  min-height: 48px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 800;
+  transition: background 0.25s;
+}
+.share-modes button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.share-step {
+  display: grid;
+  gap: 14px;
+  padding: clamp(20px, 3vw, 30px);
+  border-radius: 24px;
+  background: var(--paper);
+}
+.share-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.share-title span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--night);
+  font-size: 14px;
+}
+.card-picker {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 6px 4px 10px;
+}
+.card-picker button {
+  flex: 0 0 auto;
+  width: clamp(116px, 30vw, 170px);
+  border-radius: 16px;
+  overflow: hidden;
+  scroll-snap-align: start;
+  outline: 3px solid transparent;
+  outline-offset: 3px;
+  transition:
+    outline-color 0.2s,
+    transform 0.25s var(--ease);
+}
+.card-picker button[aria-pressed="true"] {
+  outline-color: var(--accent-ink);
+  transform: translateY(-3px);
+}
+.card-picker img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 9 / 16;
+  background: var(--sage);
+}
+.share-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.share-buttons .button-primary {
+  width: auto;
+  flex: 1 1 260px;
+  min-height: 60px;
+  font-size: 17px;
+}
+.share-buttons .button-outline {
+  flex: 0 1 auto;
+}
+.share-tip {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.inline-button {
+  min-height: 44px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.invite-input {
+  width: 100%;
+  min-height: 50px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 16px;
+}
+.share-message {
+  position: relative;
+  padding: 16px 18px;
+  border-radius: 18px 18px 18px 4px;
+  background: #dcf1d4;
+  color: var(--night);
+  font-size: 15px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.button-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex: 1 1 240px;
+  min-height: 56px;
+  padding: 14px 22px;
+  border-radius: 16px;
+  background: #1d6b45;
+  color: white;
+  font-size: 16px;
+  font-weight: 800;
+}
+.share-scene .invitation-footer {
+  max-width: none;
 }
 
 /* ---------- Dialogs ---------- */
@@ -1687,4 +1830,7 @@ html[data-enhanced] .encounter {
   .kinetic {
     filter: none;
   }
+}
+html:not([data-enhanced]) .sound-hint {
+  display: none;
 }

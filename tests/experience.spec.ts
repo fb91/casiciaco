@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { retreat } from "../src/config/retreat";
+import { cardIds } from "../src/config/share-cards";
 
 async function holdToSilence(page: Page) {
   await page.locator("#silencio").scrollIntoViewIfNeeded();
@@ -147,9 +148,13 @@ test("the choice is optional, reversible and shapes the invitation", async ({
   await expect(page.locator(".invitation-line")).toHaveText(
     retreat.copy.invitationBy[0],
   );
-  await expect(page.locator(".share-copy")).toContainText(
+  await page.getByRole("button", { name: "Me voy a Casiciaco" }).click();
+  await expect(page.getByTestId("share-message")).toContainText(
     retreat.copy.storyBy[0],
   );
+  await expect(
+    page.getByRole("button", { name: retreat.copy.storyBy[0] }),
+  ).toHaveAttribute("aria-pressed", "true");
   await choice.click();
   await expect(choice).toHaveAttribute("aria-pressed", "false");
   await expect(page.locator(".invitation-line")).toHaveText(
@@ -167,7 +172,7 @@ test("personal invitations greet the friend and sanitize the name", async ({
   await expect(page.locator(".inviter")).toHaveCount(0);
 });
 
-test("share fallback builds a personal link, copies it and restores focus", async ({
+test("anyone can share an invitation: story cards, personal link and ready message", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -184,23 +189,42 @@ test("share fallback builds a personal link, copies it and restores focus", asyn
       configurable: true,
     });
   });
-  await page.goto("/?ref=colegio&private=do-not-share#invitacion");
+  const copied = () =>
+    page.evaluate(() => (window as unknown as { copied: string }).copied);
+  await page.goto("/?ref=colegio&private=do-not-share#compartir");
+  await expect(page.locator("#compartir")).toBeInViewport();
+  // Invitation cards are the default, for people who are not going themselves.
+  const cards = page.locator(".card-picker button");
+  await expect(cards).toHaveCount(3);
+  await cards.nth(1).click();
+  await expect(cards.nth(1)).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("link", { name: /Descargar imagen/ }),
+  ).toHaveAttribute("href", "/historia/scrolleando");
+  await page.getByRole("button", { name: "Copiar enlace" }).click();
+  expect(await copied()).toBe("http://127.0.0.1:3000/?ref=historia");
   await page.getByLabel(/Tu nombre/).fill("Juli");
-  const share = page.getByRole("button", { name: "Compartir", exact: true });
-  await share.click();
+  const message = page.getByTestId("share-message");
+  await expect(message).toContainText("13, 14 y 15 de noviembre");
+  await expect(message).toContainText(
+    "http://127.0.0.1:3000/?de=Juli&ref=invitacion",
+  );
   await expect(
     page.getByRole("link", { name: /Enviar por WhatsApp/ }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Copiar enlace" }).click();
-  await expect(page.getByRole("status")).toContainText("Enlace copiado");
-  expect(
-    await page.evaluate(() => (window as unknown as { copied: string }).copied),
-  ).toBe("http://127.0.0.1:3000/?de=Juli&ref=invitacion");
-  await page.keyboard.press("Escape");
-  await expect(share).toBeFocused();
+  ).toHaveAttribute("href", /wa\.me\/\?text=.*de%3DJuli/);
+  await page.getByRole("button", { name: "Copiar mensaje" }).click();
+  await expect(page.getByRole("status")).toContainText("Mensaje copiado");
+  expect(await copied()).toContain("?de=Juli&ref=invitacion");
+  expect(await copied()).not.toContain("private");
+  // Without Web Share, the story card is downloaded.
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Compartir en tu historia" }).click();
+  expect((await download).suggestedFilename()).toBe(
+    "casiciaco-scrolleando.png",
+  );
 });
 
-test("canceling native share does not open a fallback", async ({ page }) => {
+test("canceling native share opens nothing else", async ({ page }) => {
   await page.addInitScript(() =>
     Object.defineProperty(navigator, "share", {
       value: async () => {
@@ -209,15 +233,32 @@ test("canceling native share does not open a fallback", async ({ page }) => {
       configurable: true,
     }),
   );
-  await page.goto("/#invitacion");
-  await page.getByRole("button", { name: "Compartir", exact: true }).click();
+  await page.goto("/#compartir");
+  await page.getByRole("button", { name: "Otras apps" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("status")).toHaveText("");
 });
 
-test("story cards are prerendered 9:16 images for every choice", async ({
+test("sound starts on, plays after the first gesture and remembers being turned off", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const toggle = page.locator(".sound-toggle");
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await page.locator(".hero-title").click();
+  await expect(toggle).toHaveText(/^Sonido$/);
+  await expect(page.locator(".sound-hint")).toHaveCount(0);
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await expect(toggle).toHaveText("Activar sonido");
+  await page.reload();
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+});
+
+test("story cards are prerendered 9:16 images for inviting and for going", async ({
   request,
 }) => {
-  for (const option of ["libre", "0", "1", "2"]) {
+  for (const option of cardIds) {
     const response = await request.get("/historia/" + option);
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toBe("image/png");

@@ -2,10 +2,23 @@
 import { useSyncExternalStore } from "react";
 
 /** Small client store shared by the story widgets: choice, sound and the silence gate. */
-type State = { choice: number | null; sound: boolean; silenced: boolean };
+type State = {
+  choice: number | null;
+  /** The visitor wants sound (on by default). */
+  sound: boolean;
+  /** The browser is actually playing it (needs a first tap or key press). */
+  audible: boolean;
+  silenced: boolean;
+};
 const silenceKey = "casiciaco-silencio";
 const choiceKey = "casiciaco-eleccion";
-let state: State = { choice: null, sound: false, silenced: false };
+const soundKey = "casiciaco-sonido";
+let state: State = {
+  choice: null,
+  sound: true,
+  audible: false,
+  silenced: false,
+};
 let hydrated = false;
 const listeners = new Set<() => void>();
 /** Per-frame values that must not re-render React (read by the scroll runtime). */
@@ -14,6 +27,13 @@ export const live = { hold: 0 };
 function read(key: string) {
   try {
     return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+function readLocal(key: string) {
+  try {
+    return localStorage.getItem(key);
   } catch {
     return null;
   }
@@ -34,6 +54,7 @@ function hydrate() {
     ...state,
     choice:
       read(choiceKey) !== null && choice >= 0 && choice < 3 ? choice : null,
+    sound: readLocal(soundKey) !== "0",
     silenced:
       read(silenceKey) === "1" ||
       document.documentElement.dataset.silence === "open",
@@ -53,7 +74,16 @@ export const storyState = {
     set({ choice });
   },
   setSound(sound: boolean) {
+    // Remembered across visits: whoever turns it off keeps it off.
+    try {
+      localStorage.setItem(soundKey, sound ? "1" : "0");
+    } catch {
+      // Blocked storage: the choice lasts for this visit.
+    }
     set({ sound });
+  },
+  setAudible(audible: boolean) {
+    if (audible !== state.audible) set({ audible });
   },
   openSilence() {
     write(silenceKey, "1");
@@ -65,7 +95,12 @@ export const storyState = {
     return () => listeners.delete(listener);
   },
 };
-const serverState: State = { choice: null, sound: false, silenced: false };
+const serverState: State = {
+  choice: null,
+  sound: true,
+  audible: false,
+  silenced: false,
+};
 export function useStory<T>(select: (state: State) => T): T {
   return useSyncExternalStore(
     storyState.subscribe,

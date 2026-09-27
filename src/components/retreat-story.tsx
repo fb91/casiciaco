@@ -9,6 +9,8 @@ import {
   InvitationActions,
   InvitationLine,
   PracticalDetails,
+  ShareStudio,
+  SoundHint,
   TestimonialGallery,
 } from "@/components/interactions";
 import { Arrow } from "@/components/marks";
@@ -117,6 +119,7 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
             {retreat.age.max}. <strong>13—15 de noviembre.</strong>
           </p>
           <Countdown compact />
+          <SoundHint />
         </div>
         <a className="scroll-hint" href="#ruido">
           <span>Deslizá</span>
@@ -380,6 +383,21 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
               <PracticalDetails />
             </details>
           </div>
+        </Scene>
+
+        <Scene id="compartir" className="share-scene">
+          <div className="share-heading">
+            <Tag>PASALA</Tag>
+            <Rise
+              id="compartir-title"
+              lines={["¿Conocés a alguien", "que lo necesita?"]}
+            />
+            <p className="slide-description" data-reveal>
+              Vayas o no, podés invitar. Subí una placa a tu historia o mandá la
+              invitación a tus grupos.
+            </p>
+          </div>
+          <ShareStudio />
           <footer className="invitation-footer">
             <p>
               {retreat.organization.name} · {retreat.organization.order}

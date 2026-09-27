@@ -13,6 +13,7 @@ type Engine = {
 let engine: Engine | null = null;
 let mix = { noise: 0, calm: 0 };
 let on = false;
+let listener: (running: boolean) => void = () => {};
 
 function build(): Engine | null {
   const Context =
@@ -21,6 +22,7 @@ function build(): Engine | null {
       .webkitAudioContext;
   if (!Context) return null;
   const context = new Context();
+  context.onstatechange = () => listener(context.state === "running");
   const master = context.createGain();
   master.gain.value = 0;
   master.connect(context.destination);
@@ -118,6 +120,14 @@ export const soundscape = {
     setTimeout(() => {
       if (!on) void context.suspend();
     }, 900);
+  },
+  /** Called whenever the browser starts or stops actually playing audio. */
+  listen(callback: (running: boolean) => void) {
+    listener = callback;
+    callback(this.running);
+  },
+  get running() {
+    return !!engine && engine.context.state === "running";
   },
   get active() {
     return on && !!engine;

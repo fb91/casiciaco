@@ -3,11 +3,13 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
   type RefObject,
 } from "react";
 import { publicUrl, retreat, type Testimonial } from "@/config/retreat";
-import { track } from "@/lib/analytics";
+import { track, type SmartEvent as SmartEventName } from "@/lib/analytics";
+import { goingCards, inviteCards, type ShareMode } from "@/config/share-cards";
 import { live, storyState, useStory } from "@/lib/story-state";
 import { soundscape } from "@/lib/soundscape";
 import { Arrow } from "./marks";
@@ -187,6 +189,27 @@ export function HoldToSilence() {
   );
 }
 
+/** Hero hint while the browser waits for a first gesture before playing sound. */
+export function SoundHint() {
+  const waiting = useStory((state) => state.sound && !state.audible);
+  if (!waiting) return null;
+  return (
+    <button
+      type="button"
+      className="sound-hint"
+      onClick={() => soundscape.enable()}
+    >
+      <span className="sound-bars" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+      Tocá para activar el sonido
+    </button>
+  );
+}
+
 export function Choice() {
   const selected = useStory((state) => state.choice);
   return (
@@ -271,6 +294,7 @@ export function Countdown({ compact = false }: { compact?: boolean }) {
   );
 }
 
+const noSubscription = () => () => {};
 function baseUrl() {
   const url = new URL(
     publicUrl(retreat.canonicalUrl) || window.location.origin,
@@ -281,88 +305,9 @@ function baseUrl() {
 }
 
 export function InvitationActions() {
-  const choice = useStory((state) => state.choice);
-  const [message, setMessage] = useState("");
-  const [shareUrl, setShareUrl] = useState("");
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
   const registration = publicUrl(retreat.registrationUrl);
   const contact = publicUrl(retreat.contactUrl);
-  const manualLink = useRef<HTMLInputElement>(null);
   const registrationDialog = useRef<HTMLDialogElement>(null);
-  const shareDialog = useRef<HTMLDialogElement>(null);
-  const shareText = `¿Y si vamos? Casiciaco · ${retreat.dates.days} de noviembre · De ${retreat.age.min} a ${retreat.age.max} años.`;
-
-  function inviteUrl() {
-    const url = baseUrl();
-    const trimmed = name.trim().slice(0, 24);
-    if (trimmed) url.searchParams.set("de", trimmed);
-    url.searchParams.set("ref", trimmed ? "invitacion" : "whatsapp");
-    return url.href;
-  }
-  async function share() {
-    const url = inviteUrl();
-    setShareUrl(url);
-    setMessage("");
-    track("share_open", { personal: name.trim() ? 1 : 0 });
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `CASICIACO #${retreat.edition}`,
-          text: shareText,
-          url,
-        });
-        track("share_handoff");
-        return;
-      } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") return;
-      }
-    }
-    shareDialog.current?.showModal();
-  }
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setMessage("Enlace copiado. ¿A quién se lo mandás?");
-      track("copy_link");
-    } catch {
-      setMessage("Podés seleccionar y copiar el enlace de abajo.");
-      manualLink.current?.focus();
-      manualLink.current?.select();
-    }
-  }
-  async function storyCard() {
-    const image = `/historia/${choice ?? "libre"}`;
-    track("story_card", { opcion: choice ?? -1 });
-    setBusy(true);
-    try {
-      const blob = await (await fetch(image)).blob();
-      const file = new File([blob], "casiciaco-historia.png", {
-        type: "image/png",
-      });
-      if (navigator.canShare?.({ files: [file] })) {
-        const url = baseUrl();
-        url.searchParams.set("ref", "historia");
-        await navigator.share({
-          files: [file],
-          title: `CASICIACO #${retreat.edition}`,
-          text: url.href,
-        });
-        return;
-      }
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "casiciaco-historia.png";
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(link.href), 4000);
-    } catch (error) {
-      if (!(error instanceof Error && error.name === "AbortError"))
-        window.open(image, "_blank");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <div className="invitation-actions">
       {registration ? (
@@ -408,82 +353,246 @@ export function InvitationActions() {
           Hablar con alguien de JAR <Arrow direction="up-right" />
         </a>
       )}
+      <a className="button-outline" href="#compartir">
+        Compartir la invitación <Arrow />
+      </a>
+    </div>
+  );
+}
 
-      <div className="share-panel">
-        <div className="share-block">
-          <p className="share-title">Contalo en tu historia</p>
-          <p className="share-copy">
-            Una placa lista para subir: «
-            {choice === null ? copy.storyDefault : copy.storyBy[choice]}»
-          </p>
+/**
+ * Sharing for everyone: people who are going and people (parish, friends) who want to
+ * invite others. Story images come from the same generator as /historia/[id].
+ */
+export function ShareStudio() {
+  const choice = useStory((state) => state.choice);
+  const [mode, setMode] = useState<ShareMode>("invitar");
+  const [picked, setPicked] = useState<string>(inviteCards[0].id);
+  const [name, setName] = useState("");
+  // Known only in the browser; empty during server rendering.
+  const origin = useSyncExternalStore(
+    noSubscription,
+    () => baseUrl().href,
+    () => "",
+  );
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const cards = mode === "invitar" ? inviteCards : goingCards;
+  const card = cards.find((item) => item.id === picked) ?? cards[0];
+  const image = `/historia/${card.id}`;
+  const trimmed = name.trim().slice(0, 24);
+  function link(ref: string) {
+    if (!origin) return "";
+    const url = new URL(origin);
+    if (trimmed) url.searchParams.set("de", trimmed);
+    url.searchParams.set("ref", trimmed ? "invitacion" : ref);
+    return url.href;
+  }
+  const facts = `Casiciaco #${retreat.edition} es un retiro para jóvenes de ${retreat.age.min} a ${retreat.age.max} años: ${retreat.dates.days.replaceAll(" · ", ", ").replace(/, (\d+)$/, " y $1")} de noviembre en ${retreat.organization.city}.`;
+  const message =
+    mode === "invitar"
+      ? `¿Qué estás buscando? ${facts} Mirá de qué se trata 👉 ${link("whatsapp")}`
+      : `Me voy a Casiciaco 🙌 ${choice === null ? "" : copy.storyBy[choice] + " "}${facts} ¿Venís? 👉 ${link("whatsapp")}`;
+
+  function switchMode(next: ShareMode) {
+    setMode(next);
+    setStatus("");
+    setPicked(
+      next === "invitar" ? inviteCards[0].id : String(choice ?? "libre"),
+    );
+  }
+  async function copyText(text: string, done: string, event: SmartEventName) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus(done);
+      track(event, { modo: mode });
+    } catch {
+      setStatus("No se pudo copiar. Mantené apretado el texto para copiarlo.");
+    }
+  }
+  async function shareImage() {
+    track("story_card", { placa: card.id, modo: mode });
+    setBusy(true);
+    setStatus("");
+    try {
+      const blob = await (await fetch(image)).blob();
+      const file = new File([blob], `casiciaco-${card.id}.png`, {
+        type: "image/png",
+      });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], text: link("historia") });
+        track("share_handoff", { modo: mode });
+        setStatus("¡Listo! Si la subís a Instagram, sumá el sticker «Enlace».");
+        return;
+      }
+      const anchor = document.createElement("a");
+      anchor.href = URL.createObjectURL(blob);
+      anchor.download = file.name;
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(anchor.href), 4000);
+      setStatus("Imagen descargada. Subila a tu historia desde la galería.");
+    } catch (error) {
+      if (!(error instanceof Error && error.name === "AbortError"))
+        window.open(image, "_blank");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function shareMessage() {
+    track("share_open", { modo: mode, personal: trimmed ? 1 : 0 });
+    if (!navigator.share)
+      return copyText(
+        message,
+        "Mensaje copiado. Pegalo donde quieras.",
+        "copy_message",
+      );
+    try {
+      await navigator.share({ text: message });
+      track("share_handoff", { modo: mode });
+    } catch {
+      // Canceled: nothing else opens.
+    }
+  }
+
+  return (
+    <div className="share-studio">
+      <div
+        className="share-modes"
+        role="group"
+        aria-label="¿Qué querés compartir?"
+      >
+        <button
+          type="button"
+          aria-pressed={mode === "invitar"}
+          onClick={() => switchMode("invitar")}
+        >
+          Quiero invitar
+        </button>
+        <button
+          type="button"
+          aria-pressed={mode === "voy"}
+          onClick={() => switchMode("voy")}
+        >
+          Me voy a Casiciaco
+        </button>
+      </div>
+
+      <div className="share-step">
+        <p className="share-title">
+          <span>1</span> Elegí una placa para tu historia
+        </p>
+        <div className="card-picker" role="group" aria-label="Placas">
+          {cards.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-pressed={item.id === card.id}
+              onClick={() => setPicked(item.id)}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/historia/${item.id}`}
+                alt={item.label}
+                width={1080}
+                height={1920}
+                loading="lazy"
+              />
+            </button>
+          ))}
+        </div>
+        <div className="share-buttons">
           <button
             type="button"
-            className="text-button"
-            onClick={storyCard}
+            className="button-primary"
+            onClick={shareImage}
             disabled={busy}
           >
-            {busy ? "Preparando…" : "Crear mi historia"}{" "}
+            {busy ? "Preparando…" : "Compartir en tu historia"}
             <Arrow direction="up-right" />
           </button>
-        </div>
-        <div className="share-block">
-          <p className="share-title">{copy.share}</p>
-          <label className="invite-label" htmlFor="invite-name">
-            Tu nombre, para que sepan quién invita <span>(opcional)</span>
-          </label>
-          <div className="invite-row">
-            <input
-              id="invite-name"
-              value={name}
-              maxLength={24}
-              autoComplete="given-name"
-              placeholder="Ej: Juli"
-              onChange={(event) => setName(event.target.value)}
-            />
-            <button
-              type="button"
-              className="text-button"
-              aria-haspopup="dialog"
-              onClick={share}
-            >
-              Compartir <Arrow direction="up-right" />
-            </button>
-          </div>
-        </div>
-      </div>
-      <InfoDialog
-        dialogRef={shareDialog}
-        id="share-dialog"
-        title="¿Y si van juntos?"
-      >
-        <div className="share-options">
           <a
-            href={`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => track("share_whatsapp")}
+            className="button-outline"
+            href={image}
+            download={`casiciaco-${card.id}.png`}
+            onClick={() =>
+              track("story_card", { placa: card.id, modo: mode, descarga: 1 })
+            }
           >
-            Enviar por WhatsApp
-            <Arrow direction="up-right" />
+            Descargar imagen <Arrow />
           </a>
-          <button type="button" onClick={copyLink}>
+        </div>
+        <p className="share-tip">
+          En Instagram sumá el sticker <strong>«Enlace»</strong> con la
+          dirección de la web. La placa ya la muestra, con un QR para escanear.{" "}
+          <button
+            type="button"
+            className="inline-button"
+            onClick={() =>
+              copyText(
+                link("historia"),
+                "Enlace copiado. Pegalo en el sticker.",
+                "copy_link",
+              )
+            }
+          >
             Copiar enlace
           </button>
-          <label className="sr-only" htmlFor="share-link">
-            Enlace para compartir
-          </label>
-          <input
-            ref={manualLink}
-            id="share-link"
-            value={shareUrl}
-            readOnly
-            onFocus={(event) => event.currentTarget.select()}
-          />
-        </div>
-        <p role="status" className="share-status">
+        </p>
+      </div>
+
+      <div className="share-step">
+        <p className="share-title">
+          <span>2</span> Mandá la invitación
+        </p>
+        <label className="invite-label" htmlFor="invite-name">
+          Tu nombre, para que sepan quién invita <span>(opcional)</span>
+        </label>
+        <input
+          id="invite-name"
+          className="invite-input"
+          value={name}
+          maxLength={24}
+          autoComplete="given-name"
+          placeholder="Ej: Juli"
+          onChange={(event) => setName(event.target.value)}
+        />
+        <p className="share-message" data-testid="share-message">
           {message}
         </p>
-      </InfoDialog>
+        <div className="share-buttons">
+          <a
+            className="button-whatsapp"
+            href={`https://wa.me/?text=${encodeURIComponent(message)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() =>
+              track("share_whatsapp", { modo: mode, personal: trimmed ? 1 : 0 })
+            }
+          >
+            Enviar por WhatsApp <Arrow direction="up-right" />
+          </a>
+          <button
+            type="button"
+            className="button-outline"
+            onClick={() =>
+              copyText(
+                message,
+                "Mensaje copiado. Pegalo en tu grupo.",
+                "copy_message",
+              )
+            }
+          >
+            Copiar mensaje
+          </button>
+          <button type="button" className="text-button" onClick={shareMessage}>
+            Otras apps <Arrow direction="up-right" />
+          </button>
+        </div>
+      </div>
+      <p role="status" className="share-status">
+        {status}
+      </p>
     </div>
   );
 }

@@ -36,9 +36,12 @@ Una sola página que se scrollea como un relato, del ruido a la calma:
 7. **Tres días**: viernes, sábado y domingo en tarjetas que se apilan, sin contar qué pasa en cada uno.
 8. **Encuentro**: pantalla oscura donde el dedo o el mouse funcionan como una linterna.
 9. **Preguntas frecuentes** y testimonios (cuando estén aprobados).
-10. **Date lugar.**: inscripción, placa 9:16 para historias (`/historia/[libre|0|1|2]`), invitación personalizada por WhatsApp o enlace, y datos prácticos.
+10. **Date lugar.**: inscripción y datos prácticos.
+11. **Pasala** (`/#compartir`): para quien va y para quien quiere invitar (por ejemplo, gente de la parroquia). Placas 9:16 para historias (`/historia/[id]`) con la dirección de la web y un QR: tres de invitación (`buscando`, `scrolleando`, `lugar`) y cuatro de «Me voy a Casiciaco» (`libre`, `0`, `1`, `2`, según la elección). Se comparten como imagen o se descargan; «Copiar enlace» sirve para el sticker de Instagram. Además, un mensaje listo para WhatsApp o grupos, con el nombre de quien invita (`?de=`) si lo completa.
 
-Sonido opcional (botón «Con sonido»): paisaje sonoro generado con Web Audio, sin archivos. Ruido que se apaga con el silencio, pad cálido, latidos y notificaciones. Nunca suena sin tocar el botón.
+Para promocionar desde la parroquia, conviene mandar directamente `casiciaco.vercel.app/#compartir`.
+
+Sonido activado por defecto: paisaje sonoro generado con Web Audio, sin archivos. Ruido que se apaga por completo al mantener apretado, pad cálido, latidos y notificaciones. Los navegadores solo dejan que suene después del primer toque o tecla, así que hasta entonces la portada muestra «Tocá para activar el sonido». Quien lo apaga lo mantiene apagado en sus próximas visitas.
 
 `Anotarme` queda fijo en el header después de la portada. Sin JavaScript, todo el relato se lee como una página común. Con movimiento reducido no hay escenas fijadas, ni cintas en movimiento, ni desplazamientos horizontales.
 
@@ -76,7 +79,7 @@ Redeploy después de cambiar variables `NEXT_PUBLIC_*`. Producción usa `https:/
 
 Vercel Web Analytics (`@vercel/analytics`): sin cookies y solo datos agregados. Activarla en el panel del proyecto → **Analytics → Enable**. Las visitas funcionan en el plan Hobby; los eventos personalizados requieren un plan que los incluya. Nunca se envían nombres ni texto libre, porque la audiencia incluye menores.
 
-Eventos: `scene_view` (`escena`), `silence_complete`, `silence_skip`, `choice` (`opcion`), `sound_on`, `registration_click` (`desde`: header o invitación; es la salida al formulario, no la inscripción confirmada), `registration_info`, `share_open` (`personal`), `share_handoff`, `share_whatsapp`, `copy_link`, `story_card`, `testimonial_play`, `testimonial_complete`. Todos llevan `origen` a partir de `?ref=`: `colegio`, `instagram`, `whatsapp`, `flyer`, `parroquia`, `historia`, `invitacion`. Cualquier otro valor queda como `directo`.
+Eventos: `scene_view` (`escena`), `silence_complete`, `silence_skip`, `choice` (`opcion`), `sound_on`, `sound_off`, `registration_click` (`desde`: header o invitación; es la salida al formulario, no la inscripción confirmada), `registration_info`, `share_open` (`personal`), `share_handoff`, `share_whatsapp`, `copy_link`, `copy_message`, `story_card` (`placa`, `modo`), `testimonial_play`, `testimonial_complete`. Todos llevan `origen` a partir de `?ref=`: `colegio`, `instagram`, `whatsapp`, `flyer`, `parroquia`, `historia`, `invitacion`. Cualquier otro valor queda como `directo`.
 
 ## UX y accesibilidad
 
@@ -85,7 +88,7 @@ Eventos: `scene_view` (`escena`), `silence_complete`, `silence_skip`, `choice` (
 - Con movimiento reducido: sin escenas fijadas, cintas, latidos ni linterna; la línea de tiempo pasa a vertical.
 - Videos con controles, subtítulos y transcripción; se cargan solo cerca de ellos y no se reproducen simultáneamente.
 - Compartir con Web Share (la placa se comparte como imagen cuando el navegador lo permite, si no se descarga). Si no hay Web Share, WhatsApp y portapapeles. Cancelar no abre otras aplicaciones.
-- Sonido solo a pedido; vibración breve al completar el silencio en los teléfonos que lo permiten.
+- Sonido activado por defecto y siempre a mano en el header para apagarlo; vibración breve al completar el silencio en los teléfonos que lo permiten.
 
 ## Fuentes históricas
 
