@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #204d70;
-  --paper: #f8fbf8;
-  --yellow: #edcb62;
-  --blue: #245b85;
+  --ink: #24483e;
+  --paper: #fcf8ef;
+  --accent: #edb6a0;
+  --primary: #345c4f;
   --font-sans: "Manrope Variable", sans-serif;
   --gutter: clamp(24px, 7vw, 112px);
 }
@@ -88,7 +88,7 @@ summary:focus-visible {
   outline-offset: 5px;
 }
 ::selection {
-  background: var(--blue);
+  background: var(--primary);
   color: white;
 }
 .arrow {
@@ -108,12 +108,133 @@ summary:focus-visible {
   left: 24px;
   z-index: 100;
   padding: 14px;
-  background: var(--yellow);
+  background: var(--accent);
   color: var(--ink);
   border-radius: 8px;
 }
 .skip-link:focus {
   top: 14px;
+}
+
+.preview-gate {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 36px 24px;
+  background: var(--paper);
+  color: var(--ink);
+  background-image: radial-gradient(
+    ellipse at 90% 0%,
+    #d6e0ca 0,
+    transparent 48%
+  );
+}
+.gate-card {
+  width: min(100%, 430px);
+}
+.gate-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 27px;
+  font-weight: 850;
+  letter-spacing: -0.05em;
+  margin-bottom: 58px;
+}
+.gate-brand > span {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--accent);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0;
+  transform: rotate(-5deg);
+}
+.gate-card .eyebrow {
+  margin-bottom: 16px;
+}
+.gate-card h1 {
+  font-size: clamp(34px, 7vw, 48px);
+  line-height: 1.15;
+}
+.gate-card h1 span {
+  color: #9c4c36;
+}
+.gate-description {
+  margin-top: 23px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.gate-card form {
+  margin-top: 32px;
+}
+.gate-card label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 750;
+}
+.gate-card input {
+  display: block;
+  width: 100%;
+  height: 64px;
+  padding: 12px 20px;
+  border: 1.5px solid #24483e80;
+  border-radius: 12px;
+  color: var(--ink);
+  background: #ffffffb0;
+  font-size: 28px;
+  letter-spacing: 0.6em;
+  text-align: center;
+}
+.gate-card input[aria-invalid="true"] {
+  border-color: #a33629;
+}
+.gate-hint {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.gate-error {
+  min-height: 24px;
+  margin-top: 8px;
+  color: #a33629;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.gate-submit {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 58px;
+  padding: 15px 20px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: var(--paper);
+  font-size: 15px;
+  font-weight: 750;
+}
+.gate-submit > span {
+  font-size: 24px;
+}
+.gate-submit:disabled {
+  cursor: default;
+  background: #66786b;
+}
+.gate-card noscript {
+  display: block;
+  margin-top: 18px;
+  line-height: 1.6;
+  font-size: 13px;
+}
+@media (max-height: 650px) {
+  .gate-brand {
+    margin-bottom: 28px;
+  }
+  .gate-card form {
+    margin-top: 22px;
+  }
 }
 
 .site-header {
@@ -143,7 +264,7 @@ summary:focus-visible {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: -0.01em;
-  background: var(--yellow);
+  background: var(--accent);
   color: var(--ink);
   border-radius: 5px;
   padding: 5px 7px;
@@ -199,6 +320,27 @@ summary:focus-visible {
   flex-direction: column;
   justify-content: center;
 }
+.back-link {
+  position: absolute;
+  top: 64px;
+  left: var(--gutter);
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 10px 4px 0;
+  font-size: 12px;
+  font-weight: 650;
+  border-radius: 5px;
+}
+.back-link > span {
+  font-size: 19px;
+}
+.back-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 .eyebrow {
   font-size: 11px;
   font-weight: 750;
@@ -233,8 +375,8 @@ summary:focus-visible {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(90deg, #142f47e6, #142f4770 70%, #142f4740),
-    linear-gradient(0deg, #142f4799, transparent 65%);
+    linear-gradient(90deg, #193b31e6, #193b3170 70%, #193b3140),
+    linear-gradient(0deg, #193b3199, transparent 65%);
 }
 [data-guided] .slide-stage {
   position: fixed;
@@ -282,7 +424,7 @@ summary:focus-visible {
   padding: 13px 15px 13px 24px;
   border-radius: 14px;
   color: var(--ink);
-  background: var(--yellow);
+  background: var(--accent);
   font-size: 16px;
   font-weight: 800;
   box-shadow: 0 4px 0 #00000024;
@@ -304,7 +446,7 @@ summary:focus-visible {
   width: 40px;
   height: 40px;
   flex: 0 0 40px;
-  background: #204d7014;
+  background: #24483e14;
   border-radius: 9px;
 }
 .action-caption {
@@ -316,7 +458,7 @@ summary:focus-visible {
   text-align: center;
 }
 [data-theme="light"] .next-cta {
-  background: var(--blue);
+  background: var(--primary);
   color: white;
 }
 [data-theme="light"] .cta-arrow {
@@ -346,23 +488,23 @@ summary:focus-visible {
 }
 .hero {
   color: var(--ink);
-  background: #d9ecf1;
+  background: #f3eee2;
 }
 .hero .image-shade {
   background:
-    linear-gradient(90deg, #d9ecf1f5 0%, #d9ecf1a6 40%, #d9ecf105 80%),
-    linear-gradient(0deg, #d9ecf155, transparent 50%);
+    linear-gradient(90deg, #f3eee2f5 0%, #f3eee2a6 40%, #f3eee205 80%),
+    linear-gradient(0deg, #f3eee255, transparent 50%);
 }
 .hero-content {
   justify-content: flex-start;
   padding-top: 8vh;
 }
 .hero .first-action .next-cta {
-  background: var(--yellow);
+  background: var(--accent);
   color: var(--ink);
 }
 .hero .first-action .cta-arrow {
-  background: #204d7014;
+  background: #24483e14;
 }
 .hero .action-caption,
 .hero .tap-hint {
@@ -370,7 +512,7 @@ summary:focus-visible {
 }
 .hero .highlight {
   display: inline-block;
-  background: var(--yellow);
+  background: var(--accent);
   color: var(--ink);
   padding: 0 0.13em 0.06em;
   margin-top: 0.1em;
@@ -406,14 +548,14 @@ summary:focus-visible {
 .date-chip > span {
   font-size: 12px;
   padding: 5px 8px;
-  border: 1px solid #204d7070;
+  border: 1px solid #24483e70;
   border-radius: 5px;
 }
 .hero-sticker {
   position: absolute;
   right: var(--gutter);
   top: 26%;
-  background: #c3dfe7;
+  background: #d6e0ca;
   color: var(--ink);
   padding: 22px;
   font-size: 19px;
@@ -425,7 +567,7 @@ summary:focus-visible {
 }
 
 .noise {
-  background: #d9eeee;
+  background: #e2e8d7;
   color: var(--ink);
 }
 .noise-field {
@@ -441,7 +583,7 @@ summary:focus-visible {
   width: 116%;
   transform: rotate(-7deg);
   font-size: clamp(50px, 7vw, 112px);
-  color: #477985;
+  color: #5e745a;
   font-weight: 800;
   letter-spacing: -0.03em;
   white-space: nowrap;
@@ -480,19 +622,23 @@ summary:focus-visible {
   text-align: center;
   background: radial-gradient(
     ellipse at center,
-    #d9eeee 22%,
-    #d9eeeef5 42%,
-    #d9eeee00 70%
+    #e2e8d7 22%,
+    #e2e8d7f5 42%,
+    #e2e8d700 70%
   );
 }
 .noise-content h2 {
   font-size: clamp(68px, 8vw, 124px);
 }
 .noise-content h2 > span {
-  color: var(--blue);
+  color: var(--primary);
 }
 .noise-content .slide-description {
   max-width: 530px;
+}
+.noise-content .small-note {
+  max-width: 490px;
+  text-wrap: pretty;
 }
 .noise .slide-action {
   align-self: center;
@@ -502,15 +648,15 @@ summary:focus-visible {
   left: 42%;
 }
 .augustine-portrait img {
-  object-position: 50% 30%;
+  object-position: 50% 22%;
 }
 .portrait-shade {
   position: absolute;
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(90deg, #204d70 26%, #204d70e0 43%, transparent 80%),
-    linear-gradient(0deg, #204d7090, transparent 55%);
+    linear-gradient(90deg, #24483e 26%, #24483ee0 43%, transparent 80%),
+    linear-gradient(0deg, #24483e90, transparent 55%);
 }
 .augustine-content {
   max-width: 60%;
@@ -519,7 +665,7 @@ summary:focus-visible {
   font-size: clamp(48px, 5.5vw, 86px);
 }
 .augustine-content h2 > span {
-  color: var(--yellow);
+  color: var(--accent);
 }
 .augustine-content .slide-description {
   max-width: 450px;
@@ -533,7 +679,7 @@ summary:focus-visible {
   color: #f3f3e8;
 }
 .reveal-content h2 > span {
-  color: var(--yellow);
+  color: var(--accent);
 }
 .reveal-content .slide-description {
   max-width: 570px;
@@ -562,7 +708,7 @@ summary:focus-visible {
 }
 
 .choice-scene {
-  background: #ebedf8;
+  background: #f1e4db;
   color: var(--ink);
 }
 .choice-content {
@@ -575,7 +721,7 @@ summary:focus-visible {
   font-size: clamp(48px, 5vw, 78px);
 }
 .choice-intro h2 > span {
-  color: var(--blue);
+  color: var(--primary);
 }
 .choices button {
   display: flex;
@@ -587,7 +733,7 @@ summary:focus-visible {
   padding: 18px;
   margin-bottom: 12px;
   background: #ffffffa8;
-  border: 2px solid #204d7015;
+  border: 2px solid #24483e15;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 700;
@@ -596,13 +742,13 @@ summary:focus-visible {
     border-color 0.2s;
 }
 .choices button:hover {
-  border-color: var(--blue);
+  border-color: var(--primary);
   transform: translateX(3px);
 }
 .choices button[aria-pressed="true"] {
-  background: var(--blue);
+  background: var(--primary);
   color: white;
-  border-color: var(--blue);
+  border-color: var(--primary);
 }
 .choice-number {
   font-size: 10px;
@@ -621,11 +767,11 @@ summary:focus-visible {
 }
 
 .moments-scene {
-  background: #d8efed;
+  background: #ecebdc;
   color: var(--ink);
 }
 .moments-heading h2 > span {
-  color: #245b85;
+  color: #345c4f;
 }
 .moments-content {
   gap: 34px;
@@ -647,9 +793,9 @@ summary:focus-visible {
   gap: 20px;
   min-height: 155px;
   padding: 24px;
-  border: 2px solid #204d70;
+  border: 2px solid #24483e;
   border-radius: 14px;
-  box-shadow: 5px 6px 0 #204d70;
+  box-shadow: 5px 6px 0 #24483e;
   font-size: clamp(18px, 1.8vw, 26px);
   font-weight: 550;
   line-height: 1.35;
@@ -668,14 +814,14 @@ summary:focus-visible {
   --tilt: -3deg;
 }
 .moment-two {
-  background: #c7c5e8;
+  background: #d4c8df;
   color: var(--ink);
   transform: rotate(2deg);
   --tilt: 2deg;
   animation-delay: -2s;
 }
 .moment-three {
-  background: #d4e7b2;
+  background: #d5dfbe;
   transform: rotate(-2deg);
   --tilt: -2deg;
   animation-delay: -4s;
@@ -688,19 +834,19 @@ summary:focus-visible {
   letter-spacing: -0.035em;
 }
 .jesus-content h2 > span {
-  color: var(--yellow);
+  color: var(--accent);
 }
 .jesus-content .slide-description {
   max-width: 580px;
 }
 .jesus-scene .image-shade {
   background:
-    linear-gradient(90deg, #142f47eb, #142f4780 72%, #142f4730),
-    linear-gradient(0deg, #142f4799, transparent);
+    linear-gradient(90deg, #193b31eb, #193b3180 72%, #193b3130),
+    linear-gradient(0deg, #193b3199, transparent);
 }
 
 .invitation {
-  background: #d2e9ed;
+  background: #f2e9dd;
   color: var(--ink);
 }
 .invitation-content {
@@ -746,14 +892,14 @@ summary:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  background: var(--blue);
+  background: var(--primary);
   color: white;
   min-height: 62px;
   border-radius: 13px;
   padding: 18px 22px;
   font-size: 16px;
   font-weight: 800;
-  box-shadow: 0 4px 0 #163c59;
+  box-shadow: 0 4px 0 #193b31;
   transition: transform 0.2s;
 }
 .button-primary:hover {
@@ -796,7 +942,7 @@ summary:focus-visible {
   justify-content: space-between;
   align-items: flex-end;
   gap: 20px;
-  border-top: 1px solid #204d7035;
+  border-top: 1px solid #24483e35;
   padding-top: 20px;
   font-size: 10px;
   line-height: 1.6;
@@ -857,7 +1003,7 @@ summary:focus-visible {
   margin-top: -9px;
   margin-right: -10px;
   border-radius: 50%;
-  background: #204d700c;
+  background: #24483e0c;
   font-size: 26px;
 }
 .info-dialog p {
@@ -872,7 +1018,7 @@ summary:focus-visible {
   grid-template-columns: 66px 1fr;
   gap: 15px;
   padding: 12px 0;
-  border-top: 1px solid #204d7020;
+  border-top: 1px solid #24483e20;
   font-size: 13px;
   line-height: 1.55;
 }
@@ -895,14 +1041,14 @@ summary:focus-visible {
   text-align: left;
   padding: 14px;
   border-radius: 10px;
-  background: var(--yellow);
+  background: var(--accent);
   font-size: 14px;
   font-weight: 750;
 }
 .share-options input {
   width: 100%;
   padding: 12px;
-  border: 1px solid #204d7050;
+  border: 1px solid #24483e50;
   border-radius: 8px;
   font-size: 12px;
 }
@@ -917,7 +1063,7 @@ summary:focus-visible {
 }
 .voices-scene,
 .doubts-scene {
-  background: #ebedf8;
+  background: #f1e4db;
   color: var(--ink);
 }
 .button-outline {
@@ -989,12 +1135,12 @@ summary:focus-visible {
   100% {
     box-shadow:
       0 4px 0 #00000024,
-      0 0 0 0 #edcb6255;
+      0 0 0 0 #edb6a055;
   }
   60% {
     box-shadow:
       0 4px 0 #00000024,
-      0 0 0 12px #edcb6200;
+      0 0 0 12px #edb6a000;
   }
 }
 @keyframes card-drift {
@@ -1021,7 +1167,7 @@ summary:focus-visible {
     font-size: 10px;
   }
   .slide-shell {
-    padding-top: 90px;
+    padding-top: 108px;
     padding-bottom: max(24px, env(safe-area-inset-bottom));
     gap: 22px;
   }
@@ -1081,10 +1227,10 @@ summary:focus-visible {
   .hero .image-shade {
     background: linear-gradient(
       180deg,
-      #d8ebf2d9 0%,
-      #d8ebf2bd 49%,
-      #d8ebf230 70%,
-      #d8ebf2e8 100%
+      #f3eee2d9 0%,
+      #f3eee2bd 49%,
+      #f3eee230 70%,
+      #f3eee2e8 100%
     );
   }
   .hero-sticker {
@@ -1136,8 +1282,8 @@ summary:focus-visible {
   }
   .portrait-shade {
     background:
-      linear-gradient(0deg, #204d70 12%, #204d70f0 34%, #204d7025 72%),
-      linear-gradient(180deg, #204d7060, transparent 25%);
+      linear-gradient(0deg, #24483e 12%, #24483ef0 34%, #24483e25 72%),
+      linear-gradient(180deg, #24483e60, transparent 25%);
   }
   .augustine-content {
     max-width: 100%;
@@ -1151,10 +1297,10 @@ summary:focus-visible {
     max-width: 410px;
   }
   .portrait-caption {
-    top: 88px;
+    top: 76px;
     right: 24px;
     bottom: auto;
-    font-size: 6px;
+    font-size: 8px;
     max-width: 145px;
     text-align: right;
     line-height: 1.6;
@@ -1287,7 +1433,7 @@ summary:focus-visible {
 }
 @media (max-height: 700px) {
   .slide-shell {
-    padding-top: 86px;
+    padding-top: 100px;
     padding-bottom: 20px;
     gap: 14px;
   }
@@ -1364,11 +1510,14 @@ summary:focus-visible {
 }
 @media (max-height: 610px) and (max-width: 899px) {
   .slide-shell {
-    padding-top: 78px;
+    padding-top: 96px;
     padding-bottom: 17px;
   }
   .site-header {
     top: 16px;
+  }
+  .back-link {
+    top: 56px;
   }
   h1 {
     font-size: 43px;
@@ -1400,10 +1549,24 @@ summary:focus-visible {
     font-size: 11px;
   }
   .noise-content h2 {
-    font-size: 54px;
+    font-size: 48px;
   }
   .noise-content .slide-description {
     font-size: 13px;
+  }
+  .noise-content .small-note {
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .noise-content > * {
+    background: #e2e8d7;
+    box-shadow: 0 0 16px 10px #e2e8d7;
+  }
+  .noise-row {
+    font-size: 42px;
+  }
+  .row-1 {
+    bottom: 16%;
   }
   .augustine-content h2 {
     font-size: 31px;
@@ -1503,6 +1666,18 @@ summary:focus-visible {
   }
 }
 @media (max-height: 500px) and (min-width: 600px) {
+  .noise-field {
+    clip-path: inset(64px 0 0);
+  }
+  .back-link {
+    top: 17px;
+    left: calc(var(--gutter) + 165px);
+    min-height: 32px;
+  }
+  .noise-content > * {
+    background: #e2e8d7;
+    box-shadow: 0 0 16px 10px #e2e8d7;
+  }
   :root {
     --gutter: 28px;
   }
@@ -1515,7 +1690,7 @@ summary:focus-visible {
     padding-top: 18px;
   }
   .hero .image-shade {
-    background: linear-gradient(90deg, #d8ebf2f0, #d8ebf2b0 50%, #d8ebf210);
+    background: linear-gradient(90deg, #f3eee2f0, #f3eee2b0 50%, #f3eee210);
   }
   .augustine-content {
     justify-content: center;

@@ -2,6 +2,13 @@ import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { retreat } from "../src/config/retreat";
 
+test.beforeEach(async ({ context }) => {
+  const response = await context.request.post("/api/preview-access", {
+    data: { code: "177" },
+  });
+  expect(response.ok()).toBe(true);
+});
+
 async function settled(page: Page, id: string) {
   await expect(page.locator("#" + id)).toHaveClass(/is-active/);
   await expect(page.locator(".slide-stage")).not.toHaveAttribute(
@@ -58,6 +65,13 @@ test("only each slide CTA advances the complete story, with visible controls and
     );
     if (index < ids.length - 1) await action.click();
   }
+  for (let index = ids.length - 1; index > 0; index--) {
+    await page
+      .getByRole("link", { name: "Volver a la pantalla anterior" })
+      .click();
+    await settled(page, ids[index - 1]);
+  }
+  await openSlide(page, "invitacion");
   await expect(
     page.getByRole("link", { name: retreat.copy.cta }),
   ).toHaveAttribute("href", retreat.registrationUrl!);
@@ -241,6 +255,9 @@ test("without JavaScript the story and practical information remain readable", a
     viewport: { width: 390, height: 844 },
   });
   const page = await context.newPage();
+  await context.request.post("http://127.0.0.1:3000/api/preview-access", {
+    data: { code: "177" },
+  });
   await page.goto("http://127.0.0.1:3000");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.locator(".no-js-info summary").click();

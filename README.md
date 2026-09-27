@@ -21,11 +21,17 @@ npx playwright install chromium
 npm test
 ```
 
-Next.js App Router + TypeScript + Tailwind. Página prerenderizada; sin backend, DB, login ni CMS. Fuentes e imágenes WebP locales. Ocho pantallas que avanzan solo mediante su CTA, con transición vertical, foco gestionado y escenas inactivas fuera de la navegación por teclado. Scroll de página bloqueado; el detalle práctico y compartir se abren en diálogos. Sin librerías de animación ni embeds de redes sociales.
+Next.js App Router + TypeScript + Tailwind. La página valida el acceso de vista previa en el servidor; sin DB ni CMS. Fuentes e imágenes WebP locales. Ocho pantallas que avanzan mediante su CTA y permiten volver con un enlace discreto «Atrás», con transición vertical, foco gestionado y escenas inactivas fuera de la navegación por teclado. Scroll de página bloqueado; el detalle práctico y compartir se abren en diálogos. Sin librerías de animación ni embeds de redes sociales.
+
+## Acceso a la vista previa
+
+El código compartido es `177`. `src/lib/preview-access.ts` lo valida en el servidor; `POST /api/preview-access` entrega una cookie HttpOnly y un token que se guarda en `localStorage` con la clave `casiciaco-preview-access`. La cookie recuerda el acceso durante un año; si falta, el token permite recuperarlo automáticamente. Un navegador sin acceso recibe únicamente la pantalla del código, también sin JavaScript y con enlaces directos a slides. No se envía el recorrido en el HTML/RSC anónimo. Se conservan los hashes al ingresar.
+
+Es una barrera sencilla para revisar un borrador, no autenticación para información confidencial: el código es corto y compartido, el repositorio y los archivos estáticos no se privatizan. Metadata, `robots.txt` y `X-Robots-Tag` indican `noindex`; la imagen social muestra solo «Vista previa». Al lanzar públicamente, retirar explícitamente el guard y revisar estas tres configuraciones de indexación.
 
 ## Editar contenido
 
-`src/config/retreat.ts` centraliza fechas, edad, organizadores, datos prácticos, enlaces, testimonios, opciones y aprobaciones. Los datos desconocidos son `null` con TODO. La narrativa y composición de cada capítulo se encuentran en `src/app/page.tsx`; su movimiento, en `experience-runtime.tsx` y `globals.css`.
+`src/config/retreat.ts` centraliza fechas, edad, organizadores, datos prácticos, enlaces, testimonios, opciones y aprobaciones. Los datos desconocidos son `null` con TODO. La narrativa y composición de cada capítulo se encuentran en `src/components/retreat-story.tsx`; su movimiento, en `experience-runtime.tsx` y `globals.css`. `src/app/page.tsx` decide si mostrar el acceso o el recorrido.
 
 Antes de lanzar la campaña:
 
@@ -37,7 +43,7 @@ Antes de lanzar la campaña:
 - [ ] Complementar las imágenes conceptuales con material real autorizado. No presentar las imágenes generadas como sede del retiro ni fotos de participantes.
 - [ ] Dominio propio, si se decide utilizar uno.
 
-La landing funciona aunque esos campos falten; no muestra testimonios ficticios ni respuestas sin aprobar. Los ocho capítulos públicos van desde la búsqueda personal hasta la invitación. La navegación incorpora automáticamente testimonios y preguntas cuando se aprueban.
+La landing funciona aunque esos campos falten; no muestra testimonios ficticios ni respuestas sin aprobar. Los ocho capítulos de la vista previa van desde la búsqueda personal hasta la invitación. La navegación incorpora automáticamente testimonios y preguntas cuando se aprueban.
 
 ## Vercel Hobby
 
@@ -50,7 +56,7 @@ Variables:
 - `NEXT_PUBLIC_SITE_URL`: URL HTTPS canónica real, sin parámetros.
 - `NEXT_PUBLIC_CLARITY_PROJECT_ID`: ID real de Microsoft Clarity.
 
-Redeploy después de cambiar variables `NEXT_PUBLIC_*`. Producción usa `https://casiciaco.vercel.app` como URL canónica por defecto; `NEXT_PUBLIC_SITE_URL` permite configurar un dominio propio. Las previews sin URL canónica quedan en `noindex`. La imagen social se genera con `next/og` a partir de la configuración y apunta al dominio público de producción. No hay Vercel Analytics.
+Redeploy después de cambiar variables `NEXT_PUBLIC_*`. Producción usa `https://casiciaco.vercel.app` como URL canónica por defecto; `NEXT_PUBLIC_SITE_URL` permite configurar un dominio propio. Toda la versión actual queda en `noindex`, incluso en producción. La imagen social de vista previa se genera con `next/og`. No hay Vercel Analytics.
 
 ## Clarity / Smart Events
 
@@ -65,8 +71,8 @@ En Clarity: Settings → Smart events para revisar los API events; el SDK se car
 ## UX y accesibilidad
 
 - Flujo principal de aproximadamente 60–90 segundos, sin tiempos forzados; testimonios opcionales.
-- Avance exclusivo por el CTA de cada pantalla; sin menú flotante. Rueda, swipe y teclas de scroll no cambian de pantalla. Enter activa el CTA y el historial del navegador permite volver.
-- Texto esencial visible sin JavaScript. Los enlaces y el detalle práctico siguen funcionando.
+- Avance por el CTA y enlace «Atrás» desde la segunda pantalla; sin menú flotante. Rueda, swipe y teclas de scroll no cambian de pantalla. Enter activa los enlaces y el historial del navegador permite volver.
+- Sin JavaScript se muestra el guard a visitantes sin acceso. Si ya tienen cookie válida, el texto y el detalle práctico siguen funcionando.
 - Reduced motion detiene los bucles de palabras y otros movimientos; las transiciones entre pantallas son inmediatas. Se conservan zoom, foco visible y cierre de diálogos con Escape.
 - Videos con controles, subtítulos y transcripción; se cargan solo cerca de ellos, se pausan al salir de pantalla y no se reproducen simultáneamente.
 - Compartir con Web Share; si no existe/falla, WhatsApp y portapapeles. Cancelar Web Share no abre otras aplicaciones.
@@ -78,11 +84,11 @@ En Clarity: Settings → Smart events para revisar los API events; el SDK se car
 - _Confesiones_, IX, 3–4: https://www.augustinus.it/spagnolo/confessioni/conf_09_libro.htm
 - Biografía / audiencia del 9 de enero de 2008: https://www.vatican.va/content/benedict-xvi/es/audiences/2008/documents/hf_ben-xvi_aud_20080109.html
 
-La estancia de Casiciaco fue posterior a la conversión y anterior al bautismo. No se atribuye la redacción de _Confesiones_ a esa estancia. El retrato de Agustín y la villa son recreaciones artísticas, no reconstrucciones históricas verificadas.
+La estancia de Casiciaco fue posterior a la conversión y anterior al bautismo. No se atribuye la redacción de _Confesiones_ a esa estancia. San Agustín se representa con una pintura histórica de Philippe de Champaigne; la villa es una evocación artística, no una reconstrucción histórica verificada.
 
 ## Assets
 
-Imágenes actuales creadas con la herramienta integrada ImageGen y optimizadas a WebP (aproximadamente 652 KiB entre las cuatro; Next.js entrega tamaños adaptados): `friends.webp`, `augustine.webp`, `cassiciacum.webp`, `encounter.webp`. Dirección visual, fuentes del flyer, naturaleza conceptual y prompts completos en [docs/visual-direction.md](docs/visual-direction.md). `journey.webp` se conserva de la portada anterior.
+Imágenes conceptuales de ImageGen: `friends.webp`, `cassiciacum.webp` y `encounter.webp`. San Agustín utiliza `saint-augustine-champaigne.webp`, reproducción de la pintura de Philippe de Champaigne (c. 1645), colección LACMA, obra de dominio público. Dirección visual, fuentes, licencias y prompts en [docs/visual-direction.md](docs/visual-direction.md). Los assets de versiones anteriores se conservan sin uso.
 
 Fotografías de Unsplash conservadas de la versión anterior, actualmente sin uso:
 
@@ -90,7 +96,7 @@ Fotografías de Unsplash conservadas de la versión anterior, actualmente sin us
 - https://images.unsplash.com/photo-1448375240586-882707db888b (luz en el bosque)
 - Licencia: https://unsplash.com/license
 
-No representan participantes ni la sede real. El antiguo SVG de Agustín fue reemplazado por un retrato cinematográfico. Manrope se sirve localmente vía Fontsource; su licencia acompaña el paquete. La portada usa una escena conceptual de amigos al aire libre.
+Las imágenes conceptuales no representan participantes ni la sede real. Manrope se sirve localmente vía Fontsource; su licencia acompaña el paquete. La portada usa una escena conceptual de amigos al aire libre.
 
 ## Vista previa y validación
 

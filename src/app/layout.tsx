@@ -3,8 +3,8 @@ import "@fontsource-variable/manrope";
 import "./globals.css";
 import { retreat, publicUrl } from "@/config/retreat";
 
-const title = `${retreat.name} #${retreat.edition} — Un finde para vos`;
-const description = `Regalate un finde para disfrutar, crecer, conocer más de Jesús y hacer nuevos amigos. ${retreat.dates.days} de noviembre de ${retreat.dates.year}. De ${retreat.age.min} a ${retreat.age.max} años. JAR, Parroquia Nuestra Señora de Luján, Rosario.`;
+const title = `${retreat.name} — Vista previa`;
+const description = "Una idea en construcción. Acceso con código.";
 const canonical = publicUrl(retreat.canonicalUrl);
 export const metadata: Metadata = {
   title,
@@ -26,12 +26,12 @@ export const metadata: Metadata = {
     ...(canonical ? { url: canonical } : {}),
   },
   twitter: { card: "summary_large_image", title, description },
-  robots: { index: !!canonical, follow: !!canonical },
+  robots: { index: false, follow: false, noarchive: true },
 };
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#204d70",
+  themeColor: "#24483e",
 };
 export default function RootLayout({
   children,

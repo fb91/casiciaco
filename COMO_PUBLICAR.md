@@ -2,6 +2,8 @@
 
 El sitio se publica en https://casiciaco.vercel.app desde `main` de `fb91/casiciaco`. Un push a esa rama dispara el despliegue automático de Vercel.
 
+Actualmente está en modo vista previa: pide el código `177` y recuerda el acceso en el dispositivo con `localStorage` y cookie HttpOnly. El servidor no entrega el recorrido a visitantes sin acceso; metadata, robots.txt y cabeceras indican `noindex`. El guard no necesita variables nuevas. Antes del lanzamiento público hay que retirarlo y actualizar la indexación y la imagen social. Es un código compartido sencillo para un borrador, no un sistema de cuentas privadas.
+
 ## Validar y publicar
 
 Usar Node 22.x. Ejecutar `npm ci`, `npm run lint`, `npm run build`, `npm run typecheck` y `npm test` (instalar Chromium de Playwright previamente). Revisar el avance por CTA, el bloqueo del scroll y la composición en celular y escritorio antes de subir los cambios.

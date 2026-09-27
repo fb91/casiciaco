@@ -1,16 +1,24 @@
 # Dirección visual — Casiciaco
 
-La experiencia avanza únicamente mediante el CTA de cada pantalla. El documento no se desplaza con rueda, gestos ni teclas de scroll. Las transiciones verticales conservan la sensación de pasar de página, sin menú flotante. Las palabras de la segunda pantalla se desplazan de forma continua con dos copias idénticas, sin salto al reiniciar. Respeta movimiento reducido, gestiona el foco y deja un documento legible como alternativa sin JavaScript.
+La experiencia avanza mediante el CTA de cada pantalla y permite retroceder con «Atrás» desde la segunda. El documento no se desplaza con rueda, gestos ni teclas de scroll. Las transiciones verticales conservan la sensación de pasar de página, sin menú flotante. Las palabras de la segunda pantalla se desplazan de forma continua con dos copias idénticas, sin salto al reiniciar. Respeta movimiento reducido y gestiona el foco. Antes del recorrido hay un acceso con código para esta versión de prueba.
+
+## Paleta actual
+
+Crema `#fcf8ef`, verde profundo `#24483e`, salvia `#e2e8d7` y terracota suave `#edb6a0`. Acentos secundarios lavanda y verde claro en las tarjetas. Se mantienen tipografía sans, pinceladas, movimiento y comunicación cercana; se retira la combinación dominante azul/amarillo. La segunda pantalla conecta las obligaciones actuales con la búsqueda de camino de Agustín antes de ser santo.
 
 ## Referencia de campaña
 
-El flyer de [la publicación oficial](https://www.instagram.com/p/DdpoV2Qz40q/) guía la paleta (azul, celeste, amarillo, aqua y pasteles), los acentos como pinceladas y el tono cercano: un finde para disfrutar, crecer, compartir mates, música, nuevos amigos y un encuentro con Jesús.
+El flyer de [la publicación oficial](https://www.instagram.com/p/DdpoV2Qz40q/) guía la información, los acentos como pinceladas y el tono cercano: un finde para disfrutar, crecer, compartir mates, música, nuevos amigos y un encuentro con Jesús. Su paleta azul/amarillo se reemplaza por la alternativa anterior a pedido del organizador.
 
 La publicación y el formulario confirman 16–30 años y 13–15 de noviembre de 2026. Se decodificó el QR de la imagen original pública y se verificó el [formulario oficial](https://docs.google.com/forms/d/e/1FAIpQLSeEdv-2l_ax-kgsCZyvjgd_wui_nuxcj775NhAPs7mGkWb5TQ/viewform), que aporta inscripción, colegio, dirección y lista de cosas para llevar. No se completó ni envió el formulario.
 
 ## Imágenes
 
-Las imágenes se crearon con la herramienta integrada ImageGen. Los archivos WebP están en `public/images/`. Son evocaciones conceptuales, no fotos de asistentes ni del lugar del evento. Agustín es una recreación artística, identificada en pantalla. Originales conservados fuera del repositorio; exportación WebP mediante Sharp. La portada actual utiliza `friends.webp`; `journey.webp` se conserva de la versión anterior.
+La portada, la villa y la capilla se crearon con ImageGen. Son evocaciones conceptuales, no fotos de asistentes ni del lugar del evento. Los archivos WebP están en `public/images/`. Originales conservados fuera del repositorio; exportación WebP mediante Sharp. `journey.webp` y el retrato generado `augustine.webp` se conservan sin uso.
+
+### saint-augustine-champaigne.webp (pintura actual)
+
+*Saint Augustine*, Philippe de Champaigne, c. 1645, óleo sobre lienzo. LACMA, M.88.177, Gift of The Ahmanson Foundation. [Ficha del museo](https://collections.lacma.org/object/61062), [imagen original](https://collections-images.lacma.org/images/61062/61062-1-primary.webp), [referencia de dominio público de la obra y reproducción](https://commons.wikimedia.org/wiki/File:Saint_Augustine_by_Philippe_de_Champaigne.jpg). Descargada del museo y optimizada a WebP de 1400 × 1783 sin alteraciones creativas. Artista y fecha acreditados en la pantalla. No es una imagen generada.
 
 ### friends.webp (portada actual)
 
@@ -20,7 +28,7 @@ Use case: photorealistic-natural. Create a brand-new wide editorial photograph f
 
 Use case: photorealistic-natural. Asset type: full-bleed hero photograph for a high-end immersive editorial website for a Catholic young-adult retreat, Casiciaco. Create a beautiful cinematic analog photograph of an open grassy hillside with a narrow trail that disappears into mist, warm early sunlight breaking through a cloud bank behind a distant mountain ridge. A tiny solitary young-adult silhouette, seen from behind far in the mid-distance, is walking toward the light; unidentifiable, no visible face. Feeling of possibility, searching, breathing, a real journey. Art direction: sophisticated outdoor editorial shot on 35mm film, natural grain, atmospheric depth, deep forest-black shadows, pale sage grass, amber sunlight, muted natural colors, authentic texture, gently hazy light, absolutely not generic saturated travel stock. Composition: wide landscape 16:9, foreground dark, horizon in upper half, preserve dark negative space across the left and center for large ivory website typography; the image itself must contain NO letters, NO text, NO logos, NO borders. A single photograph, no collage. This is a conceptual atmosphere image, not a representation of an actual retreat venue. High resolution.
 
-### augustine.webp
+### augustine.webp (retrato anterior, sin uso)
 
 Use case: historical-scene. Asset type: cinematic editorial portrait for an immersive young-adult website about the search of Augustine of Hippo. A photorealistic, emotionally compelling film still depicting an imagined Augustine in his early thirties in late fourth-century northern Italy, of North African origin, medium olive-brown skin, dark short curly hair, subtle beard, wearing a simple textured ivory late-Roman linen tunic and dark muted cloak. Three-quarter close portrait from chest up, looking thoughtfully toward a bright open window just off-frame on the left, imperfect natural skin, attentive human expression, no theatrical saint pose. A softly blurred old plaster wall and olive greenery outside a window. Dramatic yet gentle chiaroscuro, warm sunlight skimming cheek, deep olive-black shadows, soft amber halation, tactile cinematic 35mm film grain. Sophisticated independent historical film cinematography, convincing human portrait with natural anatomy, premium art direction. Portrait 4:5 composition, face in upper middle, background uncluttered. NO halo, NO bishop mitre, NO cartoon, NO vector, NO illustration, NO text, NO logos, NO medieval costume. An explicitly imaginative historical portrayal, not a real photograph or an authenticated likeness.
 
