@@ -105,19 +105,32 @@ test("the timeline moves sideways with the vertical scroll", async ({
   await page.goto("/#historia");
   const timeline = page.locator("#historia");
   await expect(timeline).toBeVisible();
+  // The runtime has measured the track once it reports progress.
+  await expect(timeline).toHaveAttribute("data-p", /\d/);
+  await expect(timeline).toHaveCSS("--dist", /px$/);
   const track = page.locator(".timeline-track");
   const x = () => track.evaluate((el) => el.getBoundingClientRect().x);
   await timeline.evaluate((el: HTMLElement) =>
-    scrollTo({ top: el.offsetTop, behavior: "instant" }),
-  );
-  const start = await x();
-  await timeline.evaluate((el: HTMLElement) =>
     scrollTo({
-      top: el.offsetTop + (el.offsetHeight - innerHeight) * 0.8,
+      top: scrollY + el.getBoundingClientRect().top,
       behavior: "instant",
     }),
   );
-  await expect.poll(x).toBeLessThan(start - 100);
+  const progress = async () => Number(await timeline.getAttribute("data-p"));
+  // Wait for the runtime to apply each scroll position before measuring.
+  await expect.poll(progress).toBeLessThan(0.1);
+  const start = await x();
+  await timeline.evaluate((el: HTMLElement) =>
+    scrollTo({
+      top:
+        scrollY +
+        el.getBoundingClientRect().top +
+        (el.offsetHeight - innerHeight) * 0.8,
+      behavior: "instant",
+    }),
+  );
+  await expect.poll(progress).toBeGreaterThan(0.7);
+  expect(await x()).toBeLessThan(start - 100);
 });
 
 test("the choice is optional, reversible and shapes the invitation", async ({
