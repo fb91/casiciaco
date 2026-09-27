@@ -1,7 +1,7 @@
 export function Arrow({
   direction = "down",
 }: {
-  direction?: "down" | "up-right" | "right";
+  direction?: "down" | "up" | "up-right" | "right";
 }) {
   return (
     <svg

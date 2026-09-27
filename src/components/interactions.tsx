@@ -8,7 +8,11 @@ import {
 } from "react";
 import { publicUrl, retreat, type Testimonial } from "@/config/retreat";
 import { track } from "@/lib/analytics";
+import { live, storyState, useStory } from "@/lib/story-state";
+import { soundscape } from "@/lib/soundscape";
 import { Arrow } from "./marks";
+
+const copy = retreat.copy;
 
 function InfoDialog({
   dialogRef,
@@ -47,26 +51,156 @@ function InfoDialog({
   );
 }
 
-export function Choice() {
-  const [selected, setSelected] = useState<number | null>(null);
-  const responses = [
-    "Un rato para bajar un cambio. Suena bien.",
-    "Compartir el camino también hace bien.",
-    "Está bien. No tenés que tener todo resuelto.",
-  ];
+const holdDuration = 2600;
+
+/** The one intentional pause: the rest of the story appears after holding still. */
+export function HoldToSilence() {
+  const silenced = useStory((state) => state.silenced);
+  const [holding, setHolding] = useState(false);
+  const held = useRef(false);
+  const ring = useRef<HTMLButtonElement>(null);
+  const pause = useRef<HTMLParagraphElement>(null);
+  const timer = useRef({ start: 0, frame: 0, value: 0 });
+
+  useEffect(() => () => cancelAnimationFrame(timer.current.frame), []);
+
+  function paint(value: number) {
+    timer.current.value = value;
+    live.hold = value;
+    ring.current
+      ?.closest("section")
+      ?.style.setProperty("--hold", value.toFixed(3));
+  }
+  function finish(skipped: boolean) {
+    cancelAnimationFrame(timer.current.frame);
+    held.current = false;
+    setHolding(false);
+    paint(1);
+    live.hold = 0;
+    navigator.vibrate?.([18, 80, 18]);
+    soundscape.chime();
+    storyState.openSilence();
+    track(skipped ? "silence_skip" : "silence_complete");
+    setTimeout(() => pause.current?.focus({ preventScroll: true }), 60);
+  }
+  function start() {
+    if (silenced || held.current) return;
+    held.current = true;
+    setHolding(true);
+    navigator.vibrate?.(12);
+    const from = timer.current.value;
+    timer.current.start = performance.now() - from * holdDuration;
+    const step = (now: number) => {
+      const value = Math.min(1, (now - timer.current.start) / holdDuration);
+      paint(value);
+      if (value >= 1) finish(false);
+      else timer.current.frame = requestAnimationFrame(step);
+    };
+    timer.current.frame = requestAnimationFrame(step);
+  }
+  function release() {
+    if (!held.current || silenced) return;
+    held.current = false;
+    setHolding(false);
+    cancelAnimationFrame(timer.current.frame);
+    // Letting go drains the ring: the noise comes back.
+    const drain = () => {
+      const value = Math.max(0, timer.current.value - 0.035);
+      paint(value);
+      if (value > 0) timer.current.frame = requestAnimationFrame(drain);
+    };
+    timer.current.frame = requestAnimationFrame(drain);
+  }
+
   return (
-    <div
-      className="choices"
-      role="group"
-      aria-label="¿Qué te gustaría encontrar?"
-      data-clarity-mask="true"
-    >
-      {retreat.copy.choice.options.map((option, index) => (
+    <div className={"silence-gate" + (silenced ? " is-open" : "")}>
+      <div className="silence-question" aria-hidden={silenced}>
+        <h2 id="silencio-title" className="kinetic">
+          {copy.scrolling.map((line) => (
+            <span key={line}>{line}</span>
+          ))}
+        </h2>
+        {!silenced && (
+          <>
+            <button
+              ref={ring}
+              type="button"
+              className={"hold-ring" + (holding ? " is-holding" : "")}
+              aria-describedby="hold-hint"
+              onPointerDown={(event) => {
+                event.currentTarget.setPointerCapture?.(event.pointerId);
+                start();
+              }}
+              onPointerUp={release}
+              onPointerCancel={release}
+              onLostPointerCapture={release}
+              onKeyDown={(event) => {
+                if (
+                  (event.key === " " || event.key === "Enter") &&
+                  !event.repeat
+                ) {
+                  event.preventDefault();
+                  start();
+                }
+              }}
+              onKeyUp={(event) => {
+                if (event.key === " " || event.key === "Enter") release();
+              }}
+              onContextMenu={(event) => event.preventDefault()}
+            >
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle cx="60" cy="60" r="54" className="ring-track" />
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="54"
+                  className="ring-fill"
+                  pathLength={1}
+                />
+              </svg>
+              <span className="hold-label">{copy.hold}</span>
+            </button>
+            <p id="hold-hint" className="hold-hint">
+              {copy.holdHint}
+            </p>
+            <button
+              type="button"
+              className="skip-silence"
+              onClick={() => finish(true)}
+            >
+              Seguir sin esperar
+            </button>
+          </>
+        )}
+      </div>
+      <div className="silence-answer" aria-hidden={!silenced}>
+        <p ref={pause} className="pause-line" tabIndex={-1}>
+          <span>{copy.pause[0]}</span>
+          <em>{copy.pause[1]}</em>
+        </p>
+        <a className="scroll-cue" href="#agustin" tabIndex={silenced ? 0 : -1}>
+          <span>Seguí bajando</span>
+          <Arrow />
+        </a>
+      </div>
+    </div>
+  );
+}
+
+export function Choice() {
+  const selected = useStory((state) => state.choice);
+  return (
+    <div className="choices" role="group" aria-label={copy.choice.question}>
+      {copy.choice.options.map((option, index) => (
         <button
           key={option}
           type="button"
           aria-pressed={selected === index}
-          onClick={() => setSelected(selected === index ? null : index)}
+          onClick={() => {
+            const next = selected === index ? null : index;
+            storyState.setChoice(next);
+            if (next !== null) track("choice", { opcion: next });
+          }}
         >
           <span className="choice-number">0{index + 1}</span>
           <span>{option}</span>
@@ -78,39 +212,104 @@ export function Choice() {
       <p className="choice-response" aria-live="polite">
         {selected === null
           ? "No hay respuestas correctas. Podés cambiar de idea."
-          : responses[selected]}
+          : copy.choice.responses[selected]}
       </p>
     </div>
   );
 }
 
+/** Invitation subtitle that answers the visitor's earlier choice. */
+export function InvitationLine() {
+  const choice = useStory((state) => state.choice);
+  return (
+    <p className="slide-description invitation-line">
+      {choice === null ? copy.invitationDefault : copy.invitationBy[choice]}
+    </p>
+  );
+}
+
+function daysLeft(now: number) {
+  const start = Date.parse(retreat.dates.startsAt);
+  const end = Date.parse(retreat.dates.endsAt);
+  if (now > end) return null;
+  if (now >= start) return 0;
+  return Math.ceil((start - now) / 86_400_000);
+}
+export function Countdown({ compact = false }: { compact?: boolean }) {
+  const [days, setDays] = useState<number | null | undefined>(undefined);
+  useEffect(() => {
+    const update = () => setDays(daysLeft(Date.now()));
+    update();
+    const interval = setInterval(update, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+  if (days === undefined || days === null) return null;
+  const text =
+    days === 0
+      ? "¡Es este finde!"
+      : days === 1
+        ? "Falta 1 día"
+        : `Faltan ${days} días`;
+  return (
+    <p className={"countdown" + (compact ? " countdown-compact" : "")}>
+      <span className="countdown-dot" aria-hidden="true" />
+      {compact ? (
+        text
+      ) : (
+        <>
+          <strong>{days === 0 ? "¡Ya!" : days}</strong>
+          <span>
+            {days === 0
+              ? "Es este finde"
+              : days === 1
+                ? "día para Casiciaco"
+                : "días para Casiciaco"}
+          </span>
+        </>
+      )}
+    </p>
+  );
+}
+
+function baseUrl() {
+  const url = new URL(
+    publicUrl(retreat.canonicalUrl) || window.location.origin,
+  );
+  url.search = "";
+  url.hash = "";
+  return url;
+}
+
 export function InvitationActions() {
+  const choice = useStory((state) => state.choice);
   const [message, setMessage] = useState("");
   const [shareUrl, setShareUrl] = useState("");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
   const registration = publicUrl(retreat.registrationUrl);
   const contact = publicUrl(retreat.contactUrl);
   const manualLink = useRef<HTMLInputElement>(null);
   const registrationDialog = useRef<HTMLDialogElement>(null);
   const shareDialog = useRef<HTMLDialogElement>(null);
-  function urlToShare() {
-    const url = new URL(
-      publicUrl(retreat.canonicalUrl) || window.location.origin,
-    );
-    url.search = "";
-    url.hash = "";
-    url.searchParams.set("ref", "whatsapp");
+  const shareText = `¿Y si vamos? Casiciaco · ${retreat.dates.days} de noviembre · De ${retreat.age.min} a ${retreat.age.max} años.`;
+
+  function inviteUrl() {
+    const url = baseUrl();
+    const trimmed = name.trim().slice(0, 24);
+    if (trimmed) url.searchParams.set("de", trimmed);
+    url.searchParams.set("ref", trimmed ? "invitacion" : "whatsapp");
     return url.href;
   }
   async function share() {
-    const url = urlToShare();
+    const url = inviteUrl();
     setShareUrl(url);
     setMessage("");
-    track("share_open");
+    track("share_open", { personal: name.trim() ? 1 : 0 });
     if (navigator.share) {
       try {
         await navigator.share({
           title: `CASICIACO #${retreat.edition}`,
-          text: `¿Y si vamos? Casiciaco · ${retreat.dates.days} de noviembre · De ${retreat.age.min} a ${retreat.age.max} años.`,
+          text: shareText,
           url,
         });
         track("share_handoff");
@@ -121,7 +320,7 @@ export function InvitationActions() {
     }
     shareDialog.current?.showModal();
   }
-  async function copy() {
+  async function copyLink() {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setMessage("Enlace copiado. ¿A quién se lo mandás?");
@@ -132,15 +331,47 @@ export function InvitationActions() {
       manualLink.current?.select();
     }
   }
+  async function storyCard() {
+    const image = `/historia/${choice ?? "libre"}`;
+    track("story_card", { opcion: choice ?? -1 });
+    setBusy(true);
+    try {
+      const blob = await (await fetch(image)).blob();
+      const file = new File([blob], "casiciaco-historia.png", {
+        type: "image/png",
+      });
+      if (navigator.canShare?.({ files: [file] })) {
+        const url = baseUrl();
+        url.searchParams.set("ref", "historia");
+        await navigator.share({
+          files: [file],
+          title: `CASICIACO #${retreat.edition}`,
+          text: url.href,
+        });
+        return;
+      }
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "casiciaco-historia.png";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+    } catch (error) {
+      if (!(error instanceof Error && error.name === "AbortError"))
+        window.open(image, "_blank");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="invitation-actions">
       {registration ? (
         <a
           className="button-primary"
           href={registration}
-          onClick={() => track("registration_click")}
+          onClick={() => track("registration_click", { desde: "invitacion" })}
         >
-          {retreat.copy.cta}
+          {copy.cta}
           <Arrow direction="up-right" />
         </a>
       ) : (
@@ -155,36 +386,70 @@ export function InvitationActions() {
               track("registration_info");
             }}
           >
-            {retreat.copy.cta}
+            {copy.cta}
             <Arrow direction="up-right" />
           </button>
-          <p className="registration-status">
-            Inscripción: información próximamente.
-          </p>
           <InfoDialog
             dialogRef={registrationDialog}
             id="registration-info"
             title="Cómo sumarte"
           >
             <p>{retreat.registrationNote}</p>
-            {contact && (
-              <a className="text-button" href={contact}>
-                Consultar a JAR <Arrow direction="up-right" />
-              </a>
-            )}
           </InfoDialog>
         </>
       )}
-      <div className="share-row">
-        <p>{retreat.copy.share}</p>
-        <button
-          type="button"
-          className="text-button"
-          aria-haspopup="dialog"
-          onClick={share}
+      {contact && (
+        <a
+          className="button-outline"
+          href={contact}
+          target="_blank"
+          rel="noopener noreferrer"
         >
-          Compartir <Arrow direction="up-right" />
-        </button>
+          Hablar con alguien de JAR <Arrow direction="up-right" />
+        </a>
+      )}
+
+      <div className="share-panel">
+        <div className="share-block">
+          <p className="share-title">Contalo en tu historia</p>
+          <p className="share-copy">
+            Una placa lista para subir: «
+            {choice === null ? copy.storyDefault : copy.storyBy[choice]}»
+          </p>
+          <button
+            type="button"
+            className="text-button"
+            onClick={storyCard}
+            disabled={busy}
+          >
+            {busy ? "Preparando…" : "Crear mi historia"}{" "}
+            <Arrow direction="up-right" />
+          </button>
+        </div>
+        <div className="share-block">
+          <p className="share-title">{copy.share}</p>
+          <label className="invite-label" htmlFor="invite-name">
+            Tu nombre, para que sepan quién invita <span>(opcional)</span>
+          </label>
+          <div className="invite-row">
+            <input
+              id="invite-name"
+              value={name}
+              maxLength={24}
+              autoComplete="given-name"
+              placeholder="Ej: Juli"
+              onChange={(event) => setName(event.target.value)}
+            />
+            <button
+              type="button"
+              className="text-button"
+              aria-haspopup="dialog"
+              onClick={share}
+            >
+              Compartir <Arrow direction="up-right" />
+            </button>
+          </div>
+        </div>
       </div>
       <InfoDialog
         dialogRef={shareDialog}
@@ -193,7 +458,7 @@ export function InvitationActions() {
       >
         <div className="share-options">
           <a
-            href={`https://wa.me/?text=${encodeURIComponent(`¿Y si vamos? CASICIACO #${retreat.edition} · ${retreat.dates.days} de noviembre de ${retreat.dates.year}. ${shareUrl}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => track("share_whatsapp")}
@@ -201,7 +466,7 @@ export function InvitationActions() {
             Enviar por WhatsApp
             <Arrow direction="up-right" />
           </a>
-          <button type="button" onClick={copy}>
+          <button type="button" onClick={copyLink}>
             Copiar enlace
           </button>
           <label className="sr-only" htmlFor="share-link">
@@ -223,11 +488,10 @@ export function InvitationActions() {
   );
 }
 
-function PracticalDetails() {
-  const contact = publicUrl(retreat.contactUrl);
+export function PracticalDetails() {
   return (
     <>
-      <dl>
+      <dl className="practical-list">
         <div>
           <dt>Fecha</dt>
           <dd>
@@ -254,78 +518,23 @@ function PracticalDetails() {
         </div>
       </dl>
       {retreat.practicalNotes && (
-        <p>
+        <p className="packing">
           <strong>Qué llevar</strong>
           <br />
           {retreat.practicalNotes}
         </p>
       )}
-      {contact && (
-        <a className="text-button" href={contact}>
-          Consultar a JAR
-          <Arrow direction="up-right" />
-        </a>
-      )}
-    </>
-  );
-}
-export function PracticalInfo() {
-  const dialog = useRef<HTMLDialogElement>(null);
-  return (
-    <>
-      <button
-        type="button"
-        className="text-button practical-trigger"
-        aria-haspopup="dialog"
-        onClick={() => dialog.current?.showModal()}
-      >
-        Ver detalles del retiro <Arrow direction="up-right" />
-      </button>
-      <InfoDialog
-        dialogRef={dialog}
-        id="practical-info"
-        title="Lo que necesitás saber"
-      >
-        <PracticalDetails />
-      </InfoDialog>
-      <noscript>
-        <details className="no-js-info">
-          <summary>Ver detalles del retiro</summary>
-          <PracticalDetails />
-        </details>
-      </noscript>
     </>
   );
 }
 
 export function TestimonialGallery({ items }: { items: Testimonial[] }) {
-  const dialog = useRef<HTMLDialogElement>(null);
   return (
-    <>
-      <button
-        type="button"
-        className="button-outline"
-        aria-haspopup="dialog"
-        onClick={() => dialog.current?.showModal()}
-      >
-        Escuchar sus experiencias
-        <Arrow direction="right" />
-      </button>
-      <InfoDialog
-        dialogRef={dialog}
-        id="testimonials"
-        title="Así lo vivieron"
-        onClose={() =>
-          dialog.current
-            ?.querySelectorAll("video")
-            .forEach((video) => video.pause())
-        }
-      >
-        {items.map((item) => (
-          <TestimonialVideo key={item.id} item={item} />
-        ))}
-      </InfoDialog>
-    </>
+    <div className="reels">
+      {items.map((item) => (
+        <TestimonialVideo key={item.id} item={item} />
+      ))}
+    </div>
   );
 }
 function TestimonialVideo({ item }: { item: Testimonial }) {
@@ -354,7 +563,6 @@ function TestimonialVideo({ item }: { item: Testimonial }) {
   }, []);
   return (
     <article className="testimonial">
-      <h3>{item.name}</h3>
       <video
         ref={video}
         controls
@@ -378,6 +586,7 @@ function TestimonialVideo({ item }: { item: Testimonial }) {
           default
         />
       </video>
+      <h3>{item.name}</h3>
       <details>
         <summary>Leer transcripción</summary>
         <p>{item.transcript}</p>

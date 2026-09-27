@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { retreat } from "./src/config/retreat";
 const config: NextConfig = {
   poweredByHeader: false,
   images: { qualities: [75, 85] },
@@ -7,7 +8,9 @@ const config: NextConfig = {
       {
         source: "/(.*)",
         headers: [
-          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+          ...(retreat.indexable
+            ? []
+            : [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }]),
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {

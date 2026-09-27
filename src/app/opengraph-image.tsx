@@ -1,16 +1,11 @@
 import { ImageResponse } from "next/og";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-export const alt = "CASICIACO — Vista previa con acceso por código";
+import { retreat } from "@/config/retreat";
+import { cardFonts, palette } from "@/lib/cards";
+
+export const alt = `CASICIACO #${retreat.edition} — ¿Qué estás buscando? Retiro para jóvenes, 13 al 15 de noviembre en Rosario`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export default async function Image() {
-  const font = await readFile(
-    join(
-      process.cwd(),
-      "node_modules/next/dist/compiled/@vercel/og/Geist-Regular.ttf",
-    ),
-  );
   return new ImageResponse(
     <div
       style={{
@@ -19,9 +14,9 @@ export default async function Image() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        padding: "48px 65px",
-        background: "#fcf8ef",
-        color: "#24483e",
+        padding: "52px 68px",
+        background: `radial-gradient(circle at 78% 30%, #2d5a4c 0%, ${palette.night} 62%)`,
+        color: palette.paper,
         fontFamily: "Geist",
       }}
     >
@@ -29,52 +24,40 @@ export default async function Image() {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          fontSize: 25,
+          fontSize: 28,
         }}
       >
-        <span>casiciaco</span>
-        <span>VISTA PREVIA</span>
+        <span>casiciaco #{retreat.edition}</span>
+        <span>RETIRO CATÓLICO JUVENIL · ROSARIO</span>
       </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          fontSize: 104,
-          letterSpacing: -5,
-          lineHeight: 1.08,
-        }}
-      >
-        <span>Algo lindo</span>
+      <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+        <span style={{ fontFamily: "Serif", fontSize: 128 }}>¿Qué estás</span>
         <span
           style={{
-            display: "flex",
-            background: "#edb6a0",
-            color: "#24483e",
-            borderRadius: 10,
-            padding: "0 20px 10px",
-            alignSelf: "flex-start",
-            marginTop: 12,
+            fontFamily: "Serif",
+            fontStyle: "italic",
+            fontSize: 150,
+            color: palette.accent,
           }}
         >
-          en proceso.
+          buscando?
         </span>
       </div>
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
-          fontSize: 24,
-          borderTop: "1px solid #24483e40",
+          fontSize: 28,
+          borderTop: `1px solid ${palette.paper}40`,
           paddingTop: 22,
         }}
       >
-        <span>Una idea en construcción.</span>
-        <span>ACCESO CON CÓDIGO</span>
+        <span>13—15 de noviembre · Tres días para hacer lugar</span>
+        <span>
+          {retreat.age.min} a {retreat.age.max} años
+        </span>
       </div>
     </div>,
-    {
-      ...size,
-      fonts: [{ name: "Geist", data: font, weight: 400, style: "normal" }],
-    },
+    { ...size, fonts: await cardFonts() },
   );
 }

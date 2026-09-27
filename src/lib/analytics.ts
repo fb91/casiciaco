@@ -1,10 +1,13 @@
-import { retreat } from "@/config/retreat";
+import { track as vercelTrack } from "@vercel/analytics";
+
 export const origins = [
   "colegio",
   "instagram",
   "whatsapp",
   "flyer",
   "parroquia",
+  "historia",
+  "invitacion",
 ] as const;
 export type Origin = (typeof origins)[number] | "directo";
 export function normalizeOrigin(value: string | null): Origin {
@@ -13,27 +16,36 @@ export function normalizeOrigin(value: string | null): Origin {
     : "directo";
 }
 export type SmartEvent =
+  | "scene_view"
+  | "silence_complete"
+  | "silence_skip"
+  | "choice"
+  | "sound_on"
   | "registration_click"
   | "registration_info"
   | "share_open"
   | "share_handoff"
   | "share_whatsapp"
   | "copy_link"
+  | "story_card"
   | "testimonial_play"
   | "testimonial_complete";
-declare global {
-  interface Window {
-    clarity?: ((...args: unknown[]) => void) & { q?: unknown[][] };
+
+/**
+ * Cookieless, aggregate events (Vercel Web Analytics). Never send names or free text:
+ * the audience includes minors.
+ */
+export function track(
+  event: SmartEvent,
+  properties: Record<string, string | number> = {},
+) {
+  if (typeof window === "undefined") return;
+  try {
+    vercelTrack(event, {
+      ...properties,
+      origen: normalizeOrigin(new URLSearchParams(location.search).get("ref")),
+    });
+  } catch {
+    // Analytics must never break the story.
   }
-}
-export function clarityAllowed(): boolean {
-  return (
-    retreat.analytics.enabled &&
-    retreat.age.min >= 18 &&
-    !!retreat.analytics.projectId?.match(/^[a-z0-9]+$/i)
-  );
-}
-export function track(event: SmartEvent) {
-  if (typeof window !== "undefined" && clarityAllowed())
-    window.clarity?.("event", event);
 }

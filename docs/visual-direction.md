@@ -1,10 +1,10 @@
 # Dirección visual — Casiciaco
 
-La experiencia avanza mediante el CTA de cada pantalla y permite retroceder con «Atrás» desde la segunda. El documento no se desplaza con rueda, gestos ni teclas de scroll. Las transiciones verticales conservan la sensación de pasar de página, sin menú flotante. Las palabras de la segunda pantalla se desplazan de forma continua con dos copias idénticas, sin salto al reiniciar. Respeta movimiento reducido y gestiona el foco. Antes del recorrido hay un acceso con código para esta versión de prueba.
+Un relato que se scrollea del ruido a la calma. La primera parte es clara, saturada y rápida: notificaciones que se apilan, palabras gigantes que aceleran con la velocidad del scroll y un titular que tiembla. En «Hay preguntas que no se responden scrolleando» la página se detiene a propósito: hay que mantener apretado para hacer silencio. Desde ahí todo es oscuro, lento y en serif (Instrument Serif): la búsqueda de Agustín en horizontal, la cita sobre un corazón que late cada vez más despacio y la luz que se revela con el dedo. La invitación vuelve a la claridad cálida. El movimiento siempre está atado al scroll o a un gesto del visitante, nunca es decoración suelta, y se desactiva con movimiento reducido.
 
 ## Paleta actual
 
-Crema `#fcf8ef`, verde profundo `#24483e`, salvia `#e2e8d7` y terracota suave `#edb6a0`. Acentos secundarios lavanda y verde claro en las tarjetas. Se mantienen tipografía sans, pinceladas, movimiento y comunicación cercana; se retira la combinación dominante azul/amarillo. La segunda pantalla conecta las obligaciones actuales con la búsqueda de camino de Agustín antes de ser santo.
+Crema `#fcf8ef`, verde profundo `#24483e`, salvia `#e2e8d7` y terracota suave `#edb6a0`. Acentos secundarios lavanda y verde claro en las tarjetas. Noche `#050a08` / `#0f1c18` para la parte de silencio, terracota intenso `#b5532f` para acentos sobre crema. Grano de película sutil en toda la página. Manrope para la voz cercana e Instrument Serif itálica para los momentos de calma. Se retira la combinación dominante azul/amarillo.
 
 ## Referencia de campaña
 

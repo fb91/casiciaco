@@ -1,7 +1,20 @@
-﻿import { hasPreviewAccess } from "@/lib/preview-access";
-import { PreviewGate } from "@/components/preview-gate";
+import type { Metadata } from "next";
 import { RetreatStory } from "@/components/retreat-story";
+import { inviterName, retreat } from "@/config/retreat";
 
-export default async function Home() {
-  return (await hasPreviewAccess()) ? <RetreatStory /> : <PreviewGate />;
+type Props = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export async function generateMetadata({
+  searchParams,
+}: Props): Promise<Metadata> {
+  const inviter = inviterName((await searchParams).de);
+  if (!inviter) return {};
+  const title = `${inviter} te invita a ${retreat.name} #${retreat.edition}`;
+  return { title, openGraph: { title }, twitter: { title } };
+}
+
+export default async function Home({ searchParams }: Props) {
+  return <RetreatStory inviter={inviterName((await searchParams).de)} />;
 }
