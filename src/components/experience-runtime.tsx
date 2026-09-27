@@ -31,7 +31,6 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
     const noise = root.querySelector<HTMLElement>("#ruido");
     const heart = root.querySelector<HTMLElement>("[data-heart]");
     const heartScene = root.querySelector<HTMLElement>("#corazon");
-    const light = root.querySelector<HTMLElement>("[data-flashlight]");
     const timeline = root.querySelector<HTMLElement>("[data-timeline]");
     const notifications =
       noise?.querySelectorAll("[data-notification]").length ?? 0;
@@ -43,7 +42,6 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
     let offsets = marquees.map(() => 0);
     let shown = 0;
     let beatPhase = 0;
-    let pointerAt = 0;
     let lastTheme = "";
     let lastPast = false;
 
@@ -153,23 +151,9 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
         heart.style.setProperty("--beat", pulse.toFixed(3));
       }
 
-      // The encounter light drifts by itself until the visitor moves it.
-      if (light && visible.has(light) && now - pointerAt > 2500) {
-        const t = now / 1000;
-        light.style.setProperty(
-          "--x",
-          (50 + Math.sin(t * 0.5) * 22).toFixed(2) + "%",
-        );
-        light.style.setProperty(
-          "--y",
-          (48 + Math.cos(t * 0.37) * 16).toFixed(2) + "%",
-        );
-      }
-
       const animating =
         (!reduced && marquees.some((marquee) => visible.has(marquee))) ||
         (heartScene && visible.has(heartScene)) ||
-        (light && visible.has(light)) ||
         velocity > 0.01;
       if (animating) frame = requestAnimationFrame(tick);
     };
@@ -190,7 +174,7 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       },
       { rootMargin: "10% 0px" },
     );
-    [...marquees, noise, heartScene, light].forEach(
+    [...marquees, noise, heartScene].forEach(
       (element) => element && observer.observe(element),
     );
 
@@ -226,22 +210,6 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       .querySelectorAll("[data-scene]")
       .forEach((element) => scenes.observe(element));
 
-    const onPointer = (event: PointerEvent) => {
-      if (!light) return;
-      const rect = light.getBoundingClientRect();
-      pointerAt = performance.now();
-      light.style.setProperty(
-        "--x",
-        ((event.clientX - rect.left) / rect.width) * 100 + "%",
-      );
-      light.style.setProperty(
-        "--y",
-        ((event.clientY - rect.top) / rect.height) * 100 + "%",
-      );
-    };
-    light?.addEventListener("pointermove", onPointer);
-    light?.addEventListener("pointerdown", onPointer);
-
     // Deep links to scenes after the silence open it directly.
     const openFromHash = () => {
       const target =
@@ -258,11 +226,30 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
     openFromHash();
     window.addEventListener("hashchange", openFromHash);
 
+    // Measuring pinned scenes changes the page height after the browser already jumped
+    // to a deep link (#compartir, #invitacion…): keep that anchor until the visitor moves.
+    let visitorMoved = false;
+    const moved = () => {
+      visitorMoved = true;
+    };
+    const keepAnchor = () => {
+      if (visitorMoved || location.hash.length < 2) return;
+      document
+        .getElementById(location.hash.slice(1))
+        ?.scrollIntoView({ behavior: "instant" });
+    };
+    const intents = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
+    intents.forEach((name) =>
+      window.addEventListener(name, moved, { passive: true, once: true }),
+    );
+
     const onResize = () => {
       measure();
+      keepAnchor();
       schedule();
     };
     measure();
+    keepAnchor();
     void document.fonts?.ready.then(onResize);
     const unsubscribe = storyState.subscribe(() =>
       requestAnimationFrame(onResize),
@@ -276,11 +263,10 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       reveals.disconnect();
       scenes.disconnect();
       unsubscribe();
-      light?.removeEventListener("pointermove", onPointer);
-      light?.removeEventListener("pointerdown", onPointer);
       window.removeEventListener("hashchange", openFromHash);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", onResize);
+      intents.forEach((name) => window.removeEventListener(name, moved));
     };
   }, []);
 

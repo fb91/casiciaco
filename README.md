@@ -34,7 +34,7 @@ Una sola página que se scrollea como un relato, del ruido a la calma:
 5. **Corazón inquieto**: la cita se enciende palabra por palabra sobre un latido que se calma.
 6. **¿Y vos?**: la elección cambia el texto de la invitación y la placa para historias.
 7. **Tres días**: viernes, sábado y domingo en tarjetas que se apilan, sin contar qué pasa en cada uno.
-8. **Encuentro**: pantalla oscura donde el dedo o el mouse funcionan como una linterna.
+8. **Encuentro**: pantalla oscura; la luz nace sobre la cruz y se abre a medida que se sigue deslizando.
 9. **Preguntas frecuentes** y testimonios (cuando estén aprobados).
 10. **Date lugar.**: inscripción y datos prácticos.
 11. **Pasala** (`/#compartir`): para quien va y para quien quiere invitar (por ejemplo, gente de la parroquia). Placas 9:16 para historias (`/historia/[id]`) con la dirección de la web y un QR: tres de invitación (`buscando`, `scrolleando`, `lugar`) y cuatro de «Me voy a Casiciaco» (`libre`, `0`, `1`, `2`, según la elección). Se comparten como imagen o se descargan; «Copiar enlace» sirve para el sticker de Instagram. Además, un mensaje listo para WhatsApp o grupos, con el nombre de quien invita (`?de=`) si lo completa.

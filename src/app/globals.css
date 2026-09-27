@@ -1232,8 +1232,9 @@ html[data-enhanced] .encounter {
   height: 240vh;
 }
 .encounter {
-  --x: 58%;
-  --y: 45%;
+  /* Where the cross sits on screen: the light is born there. */
+  --x: 87%;
+  --y: 46%;
   background: #050a08;
   color: var(--paper);
 }
@@ -1241,13 +1242,22 @@ html[data-enhanced] .encounter {
   display: flex;
   align-items: flex-end;
   padding: 110px var(--gutter) 12svh;
-  touch-action: pan-y;
 }
 .encounter-media img {
   object-position: 70% 50%;
 }
+@media (max-aspect-ratio: 1/1) {
+  /* Portrait screens: crop toward the cross so it is always in frame. */
+  .encounter {
+    --x: 60%;
+    --y: 44%;
+  }
+  .encounter-media img {
+    object-position: 95% 50%;
+  }
+}
 .encounter-dark {
-  --r: calc(3vmax + clamp(0, (var(--p) - 0.3) / 0.55, 1) * 120vmax);
+  --r: calc(10vmax + clamp(0, (var(--p) - 0.12) / 0.6, 1) * 120vmax);
   position: absolute;
   inset: 0;
   background: radial-gradient(
@@ -1261,7 +1271,7 @@ html[data-enhanced] .encounter {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, #050a08e6 0%, transparent 60%);
+  background: linear-gradient(0deg, #050a08e6 0%, transparent 38%);
 }
 .encounter-content {
   position: relative;
@@ -1281,7 +1291,14 @@ html[data-enhanced] .encounter {
   font-weight: 750;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: calc(0.7 - var(--p) * 0.7);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: clamp(0, (0.7 - var(--p)) * 4, 1);
+}
+.encounter-hint .arrow {
+  width: 18px;
+  animation: nudge 1.6s var(--ease) infinite;
 }
 
 /* ---------- Testimonials & FAQ ---------- */

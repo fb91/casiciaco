@@ -305,7 +305,7 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
           </p>
         </Scene>
 
-        <Scene id="jesus" className="encounter" dark pin data-flashlight>
+        <Scene id="jesus" className="encounter" dark pin>
           <div className="encounter-media">
             <Image
               src="/images/encounter.webp"
@@ -319,7 +319,7 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
           <div className="encounter-content">
             <Rise id="jesus-title" lines={copy.jesus} className="serif" />
             <p className="encounter-hint" aria-hidden="true">
-              Mové el dedo. Hacé lugar a la luz.
+              Seguí deslizando <Arrow />
             </p>
           </div>
         </Scene>
