@@ -1,12 +1,22 @@
 # Dirección visual — Casiciaco
 
-La experiencia usa scroll nativo con escenas sticky, movimiento ligado al avance y controles para recorrer capítulos. Respeta movimiento reducido y conserva el contenido sin JavaScript.
+La experiencia avanza únicamente mediante el CTA de cada pantalla. El documento no se desplaza con rueda, gestos ni teclas de scroll. Las transiciones verticales conservan la sensación de pasar de página, sin menú flotante. Las palabras de la segunda pantalla se desplazan de forma continua con dos copias idénticas, sin salto al reiniciar. Respeta movimiento reducido, gestiona el foco y deja un documento legible como alternativa sin JavaScript.
+
+## Referencia de campaña
+
+El flyer de [la publicación oficial](https://www.instagram.com/p/DdpoV2Qz40q/) guía la paleta (azul, celeste, amarillo, aqua y pasteles), los acentos como pinceladas y el tono cercano: un finde para disfrutar, crecer, compartir mates, música, nuevos amigos y un encuentro con Jesús.
+
+La publicación y el formulario confirman 16–30 años y 13–15 de noviembre de 2026. Se decodificó el QR de la imagen original pública y se verificó el [formulario oficial](https://docs.google.com/forms/d/e/1FAIpQLSeEdv-2l_ax-kgsCZyvjgd_wui_nuxcj775NhAPs7mGkWb5TQ/viewform), que aporta inscripción, colegio, dirección y lista de cosas para llevar. No se completó ni envió el formulario.
 
 ## Imágenes
 
-Cuatro imágenes creadas con la herramienta integrada ImageGen. Los archivos WebP están en `public/images/`. Son evocaciones conceptuales, no fotos de asistentes ni del lugar del evento. Agustín es una recreación artística, identificada en pantalla. Originales conservados fuera del repositorio; exportación WebP mediante Sharp.
+Las imágenes se crearon con la herramienta integrada ImageGen. Los archivos WebP están en `public/images/`. Son evocaciones conceptuales, no fotos de asistentes ni del lugar del evento. Agustín es una recreación artística, identificada en pantalla. Originales conservados fuera del repositorio; exportación WebP mediante Sharp. La portada actual utiliza `friends.webp`; `journey.webp` se conserva de la versión anterior.
 
-### journey.webp
+### friends.webp (portada actual)
+
+Use case: photorealistic-natural. Create a brand-new wide editorial photograph for the homepage of Casiciaco, a Catholic youth retreat in Rosario, Argentina. A small group of six young adult friends aged 19 to 25, diverse women and men in casual denim, hoodies and canvas backpacks, seated together on grass with their backs to the camera, sharing a relaxed afternoon outdoors. One holds a small Argentine mate gourd naturally. Their faces are not identifiable. Friendship, joy, belonging, a simple weekend together. They occupy only the lower-right quarter of a wide landscape composition. Behind them: gently rolling green countryside, soft distant trees, warm late-afternoon sunshine; not dramatic mountains. At least the upper half and left third are spacious soft pale blue sky with a few natural clouds, ample clean negative space for navy website text. Colors inspired by a cheerful Argentine youth retreat flyer: pale sky blue, soft aqua, golden yellow sunlight, natural greens, deep blue casual clothing. Modern authentic lifestyle photograph with fine natural grain, lively but restrained saturation, believable anatomy, candid not staged, no fashion-ad gloss. Wide landscape 16:9. NO typography, NO logos, NO collage, NO UI, NO borders, NO watermarks. Conceptual atmosphere image; these are fictional people, not actual retreat participants or the actual event venue.
+
+### journey.webp (portada anterior)
 
 Use case: photorealistic-natural. Asset type: full-bleed hero photograph for a high-end immersive editorial website for a Catholic young-adult retreat, Casiciaco. Create a beautiful cinematic analog photograph of an open grassy hillside with a narrow trail that disappears into mist, warm early sunlight breaking through a cloud bank behind a distant mountain ridge. A tiny solitary young-adult silhouette, seen from behind far in the mid-distance, is walking toward the light; unidentifiable, no visible face. Feeling of possibility, searching, breathing, a real journey. Art direction: sophisticated outdoor editorial shot on 35mm film, natural grain, atmospheric depth, deep forest-black shadows, pale sage grass, amber sunlight, muted natural colors, authentic texture, gently hazy light, absolutely not generic saturated travel stock. Composition: wide landscape 16:9, foreground dark, horizon in upper half, preserve dark negative space across the left and center for large ivory website typography; the image itself must contain NO letters, NO text, NO logos, NO borders. A single photograph, no collage. This is a conceptual atmosphere image, not a representation of an actual retreat venue. High resolution.
 

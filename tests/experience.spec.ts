@@ -1,58 +1,134 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { retreat } from "../src/config/retreat";
 
-test("mobile narrative is navigable, has no overflow and ends in an honest invitation", async ({
+async function settled(page: Page, id: string) {
+  await expect(page.locator("#" + id)).toHaveClass(/is-active/);
+  await expect(page.locator(".slide-stage")).not.toHaveAttribute(
+    "aria-busy",
+    "true",
+  );
+}
+async function openSlide(page: Page, id: string) {
+  await page.goto("/#" + id);
+  await settled(page, id);
+}
+
+test("only each slide CTA advances the complete story, with visible controls and no floating menu", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/?ref=colegio");
+  await settled(page, "inicio");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "buscando",
+    "para vos",
   );
-  const scenes = page.locator("[data-scene]");
-  expect(await scenes.count()).toBe(8); // Unapproved testimonials and FAQs stay unpublished.
-  for (const scene of await scenes.all()) {
-    await scene.scrollIntoViewIfNeeded();
+  await expect(page.locator(".journey-nav")).toHaveCount(0);
+  await expect(page.locator(".site-header a, .site-header button")).toHaveCount(
+    0,
+  );
+  const ids = await page
+    .locator("[data-scene]")
+    .evaluateAll((elements) => elements.map((el) => el.id));
+  expect(ids).toHaveLength(8);
+  for (const [index, id] of ids.entries()) {
+    await settled(page, id);
+    await expect(
+      page.getByRole("heading", { level: id === "inicio" ? 1 : 2 }),
+    ).toHaveCount(1);
+    await expect(page.locator(".step-counter")).toHaveAttribute(
+      "aria-label",
+      `Pantalla ${index + 1} de 8`,
+    );
+    expect(await page.evaluate(() => scrollY)).toBe(0);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
+    const action = page.locator(
+      "#" + id + (index < ids.length - 1 ? " .next-cta" : " .button-primary"),
+    );
+    const box = await action.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.y).toBeGreaterThan(65);
+    expect(box!.y + box!.height).toBeLessThanOrEqual(
+      page.viewportSize()!.height,
+    );
+    if (index < ids.length - 1) await action.click();
   }
-  await page.getByRole("button", { name: "QUIERO VIVIR CASICIACO" }).click();
-  await expect(page.locator("#registration-info")).toContainText(
-    "estará disponible",
-  );
-  await page.locator(".practical summary").click();
-  await expect(page.locator(".practical")).toContainText(
+  await expect(
+    page.getByRole("link", { name: retreat.copy.cta }),
+  ).toHaveAttribute("href", retreat.registrationUrl!);
+  await page.getByRole("button", { name: "Ver detalles del retiro" }).click();
+  await expect(page.getByRole("dialog")).toContainText(
     `De ${retreat.age.min} a ${retreat.age.max} años`,
   );
+  await page.getByRole("button", { name: "Cerrar", exact: true }).click();
+  await page.getByRole("link", { name: "Volver a empezar" }).click();
+  await settled(page, "inicio");
   expect(errors).toEqual([]);
 });
 
-test("personal choice is reversible and no tracker loads without a project ID", async ({
+test("wheel, touch and scroll keys cannot advance; the words move without scrolling", async ({
+  page,
+}) => {
+  await openSlide(page, "ruido");
+  const words = page.locator(".row-0 .marquee-track");
+  const initial = await words.evaluate((el) => el.getBoundingClientRect().x);
+  await expect
+    .poll(() => words.evaluate((el) => el.getBoundingClientRect().x))
+    .not.toBe(initial);
+  await page.mouse.wheel(0, 1500);
+  await page.keyboard.press("PageDown");
+  await page.keyboard.press("End");
+  await page.evaluate(() => scrollTo(0, 2000));
+  const client = await page.context().newCDPSession(page);
+  await client.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: 180, y: 400 }],
+  });
+  await client.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x: 180, y: 130 }],
+  });
+  await client.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  await client.detach();
+  await settled(page, "ruido");
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+  await page.locator("#ruido .next-cta").focus();
+  await page.keyboard.press("Enter");
+  await settled(page, "agustin");
+  await expect(page.locator("#agustin-title")).toBeFocused();
+});
+
+test("personal choice is optional, reversible and private", async ({
   page,
 }) => {
   const requests: string[] = [];
   page.on("request", (req) => requests.push(req.url()));
-  await page.goto("/?ref=colegio");
+  await openSlide(page, "vos");
   const choice = page.getByRole("button", { name: /Un poco de calma/ });
   await choice.click();
   await expect(choice).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".choice-response")).toContainText(
-    "hacer una pausa",
+    "bajar un cambio",
   );
   await choice.click();
   await expect(choice).toHaveAttribute("aria-pressed", "false");
   await expect(page.locator(".choice-response")).toContainText(
     "Podés cambiar de idea",
   );
+  await page.locator("#vos .next-cta").click();
+  await settled(page, "tres-dias");
   expect(requests.filter((url) => url.includes("clarity.ms"))).toEqual([]);
 });
 
-test("share fallback removes incoming identifiers and supports copying", async ({
+test("share fallback removes identifiers, copies and restores focus on closing", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -69,17 +145,21 @@ test("share fallback removes incoming identifiers and supports copying", async (
       configurable: true,
     });
   });
-  await page.goto("/?ref=colegio&private=do-not-share");
+  await page.goto("/?ref=colegio&private=do-not-share#invitacion");
+  await settled(page, "invitacion");
   await page.getByRole("button", { name: "Compartir", exact: true }).click();
   await expect(
     page.getByRole("link", { name: /Enviar por WhatsApp/ }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Copiar enlace" }).click();
   await expect(page.getByRole("status")).toContainText("Enlace copiado");
-  const copied = await page.evaluate(
-    () => (window as unknown as { copied: string }).copied,
-  );
-  expect(copied).toBe("http://127.0.0.1:3000/?ref=whatsapp");
+  expect(
+    await page.evaluate(() => (window as unknown as { copied: string }).copied),
+  ).toBe("http://127.0.0.1:3000/?ref=whatsapp");
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", { name: "Compartir", exact: true }),
+  ).toBeFocused();
 });
 
 test("canceling native share does not open a fallback", async ({ page }) => {
@@ -91,28 +171,69 @@ test("canceling native share does not open a fallback", async ({ page }) => {
       configurable: true,
     }),
   );
-  await page.goto("/");
+  await openSlide(page, "invitacion");
   await page.getByRole("button", { name: "Compartir", exact: true }).click();
-  await expect(
-    page.getByRole("link", { name: /Enviar por WhatsApp/ }),
-  ).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
-test("reduced motion and WCAG checks", async ({ page }) => {
+test("reduced motion keeps CTA navigation and accessibility across all slides and dialogs", async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
+  for (const id of [
+    "inicio",
+    "ruido",
+    "agustin",
+    "casiciaco",
+    "vos",
+    "tres-dias",
+    "jesus",
+    "invitacion",
+  ]) {
+    await settled(page, id);
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+    if (id === "ruido")
+      expect(
+        await page
+          .locator(".marquee-track")
+          .first()
+          .evaluate((el) => getComputedStyle(el).animationName),
+      ).toBe("none");
+    if (id !== "invitacion")
+      await page.locator("#" + id + " .next-cta").click();
+  }
+  await page.getByRole("button", { name: "Ver detalles del retiro" }).click();
   expect(
-    await page.evaluate(
-      () => getComputedStyle(document.documentElement).scrollSnapType,
-    ),
-  ).toBe("none");
-  const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-    .analyze();
-  expect(results.violations).toEqual([]);
+    (
+      await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+        .analyze()
+    ).violations,
+  ).toEqual([]);
 });
 
-test("content and invitation remain available without JavaScript", async ({
+test("browser history returns to the previous slide without unlocking scroll", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await settled(page, "inicio");
+  await page.locator("#inicio .next-cta").click();
+  await settled(page, "ruido");
+  await page.goBack();
+  await settled(page, "inicio");
+  await page.goForward();
+  await settled(page, "ruido");
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+});
+
+test("without JavaScript the story and practical information remain readable", async ({
   browser,
 }) => {
   const context = await browser.newContext({
@@ -122,74 +243,9 @@ test("content and invitation remain available without JavaScript", async ({
   const page = await context.newPage();
   await page.goto("http://127.0.0.1:3000");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await page.locator(".practical summary").click();
-  await expect(page.locator(".practical")).toContainText(
+  await page.locator(".no-js-info summary").click();
+  await expect(page.locator(".no-js-info")).toContainText(
     `De ${retreat.age.min} a ${retreat.age.max} años`,
   );
   await context.close();
-});
-
-test("chapter controls scroll through the full story and back", async ({
-  page,
-}) => {
-  await page.goto("/");
-  const previous = page.getByRole("button", { name: "Capítulo anterior" });
-  await expect(previous).toBeDisabled();
-  const chapters = await page
-    .locator("[data-scene]")
-    .evaluateAll((elements) => elements.map((el) => el.id));
-  for (const id of chapters.slice(1)) {
-    const before = await page.evaluate(() => scrollY);
-    await page.getByRole("button", { name: "Capítulo siguiente" }).click();
-    await expect
-      .poll(() =>
-        page
-          .locator("#" + id)
-          .evaluate((el) => Math.abs(el.getBoundingClientRect().top)),
-      )
-      .toBeLessThan(3);
-    expect(await page.evaluate(() => scrollY)).toBeGreaterThan(before);
-    await expect(page.locator(".journey-count")).toContainText(
-      String(chapters.indexOf(id) + 1).padStart(2, "0"),
-    );
-  }
-  await previous.click();
-  await expect
-    .poll(() =>
-      page
-        .locator("#jesus")
-        .evaluate((el) => Math.abs(el.getBoundingClientRect().top)),
-    )
-    .toBeLessThan(3);
-  await page.getByRole("button", { name: "Capítulo siguiente" }).click();
-  await expect(
-    page.getByRole("button", { name: "Volver al primer capítulo" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Volver al primer capítulo" }).click();
-  await expect.poll(() => page.evaluate(() => scrollY)).toBeLessThan(3);
-});
-
-test("native scrolling moves the composition and reduced motion stops it", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await expect(page.locator(".journey-nav")).toBeVisible();
-  const media = page.locator(".hero-media");
-  const before = await media.evaluate((el) => getComputedStyle(el).transform);
-  await page.evaluate(() => scrollBy({ top: 200, behavior: "instant" }));
-  await expect
-    .poll(() => media.evaluate((el) => getComputedStyle(el).transform))
-    .not.toBe(before);
-  expect(await page.evaluate(() => scrollY)).toBe(200);
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect
-    .poll(() => media.evaluate((el) => getComputedStyle(el).transform))
-    .toBe("none");
-  await expect
-    .poll(() =>
-      page
-        .locator(".hero-panel")
-        .evaluate((el) => getComputedStyle(el).position),
-    )
-    .toBe("relative");
 });

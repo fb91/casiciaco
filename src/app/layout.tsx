@@ -1,12 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/manrope";
-import "@fontsource/instrument-serif/latin-400-italic.css";
-import "@fontsource/instrument-serif/latin-400.css";
 import "./globals.css";
 import { retreat, publicUrl } from "@/config/retreat";
 
-const title = `${retreat.name} #${retreat.edition} — Date lugar`;
-const description = `Tres días para hacer lugar. Retiro católico juvenil de JAR, ${retreat.dates.days} de noviembre de ${retreat.dates.year}. De ${retreat.age.min} a ${retreat.age.max} años. Parroquia Nuestra Señora de Luján, Rosario.`;
+const title = `${retreat.name} #${retreat.edition} — Un finde para vos`;
+const description = `Regalate un finde para disfrutar, crecer, conocer más de Jesús y hacer nuevos amigos. ${retreat.dates.days} de noviembre de ${retreat.dates.year}. De ${retreat.age.min} a ${retreat.age.max} años. JAR, Parroquia Nuestra Señora de Luján, Rosario.`;
 const canonical = publicUrl(retreat.canonicalUrl);
 export const metadata: Metadata = {
   title,
@@ -33,7 +31,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#17251e",
+  themeColor: "#204d70",
 };
 export default function RootLayout({
   children,
@@ -41,8 +39,8 @@ export default function RootLayout({
   return (
     <html lang="es-AR">
       <body>
-        <a className="skip-link" href="#invitacion">
-          Ir a la invitación
+        <a className="skip-link" href="#recorrido">
+          Ir al contenido
         </a>
         {children}
       </body>

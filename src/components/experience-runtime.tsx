@@ -1,86 +1,165 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { retreat } from "@/config/retreat";
 import { clarityAllowed, normalizeOrigin } from "@/lib/analytics";
-import { Arrow } from "./marks";
 
-type Chapter = { id: string; label: string };
-const clamp = (value: number) => Math.max(0, Math.min(1, value));
+/** Enhance the server-rendered story into a button-operated, one-screen deck. */
+export function ExperienceRuntime({
+  children,
+  total,
+}: {
+  children: ReactNode;
+  total: number;
+}) {
+  const stage = useRef<HTMLElement>(null);
+  const [step, setStep] = useState(1);
+  const [light, setLight] = useState(true);
 
-export function ExperienceRuntime() {
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [active, setActive] = useState(0);
-  const activeRef = useRef(0);
-  const progress = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const sections = [
-      ...document.querySelectorAll<HTMLElement>("[data-scene]"),
-    ];
+  useLayoutEffect(() => {
+    const root = stage.current!;
+    const slides = [...root.querySelectorAll<HTMLElement>("[data-scene]")];
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
-    let frame = 0;
-    let mounted = true;
-    const update = () => {
-      frame = 0;
-      const height = innerHeight;
-      let current = 0;
-      sections.forEach((section, index) => {
-        const rect = section.getBoundingClientRect();
-        if (rect.top <= height * 0.45) current = index;
-        if (rect.top < height * 1.3 && rect.bottom > -height * 0.3) {
-          const travel = clamp(
-            -rect.top / Math.max(rect.height - height, height * 0.5),
-          );
-          section.style.setProperty(
-            "--scene-progress",
-            motion.matches ? "0" : travel.toFixed(4),
-          );
-          section.style.setProperty(
-            "--arrival",
-            motion.matches
-              ? "1"
-              : clamp((height - rect.top) / (height * 0.8)).toFixed(4),
-          );
-          section.classList.add("is-seen");
-        }
+    let current = 0;
+    let busy = false;
+    let alive = true;
+    let revision = 0;
+    let animations: Animation[] = [];
+    let preloadFrame = 0;
+    const reset = () =>
+      slides.forEach((slide, index) => {
+        const active = index === current;
+        slide.classList.toggle("is-active", active);
+        slide.classList.remove("is-outgoing");
+        slide.inert = !active;
+        slide.setAttribute("aria-hidden", String(!active));
       });
-      if (current !== activeRef.current) {
-        activeRef.current = current;
-        setActive(current);
+    const focusHeading = () =>
+      slides[current]
+        .querySelector<HTMLElement>("h1, h2")
+        ?.focus({ preventScroll: true });
+    const go = (
+      id: string,
+      historyMode: "push" | "none" = "push",
+      focus = true,
+    ) => {
+      const next = slides.findIndex((slide) => slide.id === id);
+      if (
+        next < 0 ||
+        (next === current && slides[next].classList.contains("is-active"))
+      )
+        return;
+      const token = ++revision;
+      animations.forEach((animation) => animation.cancel());
+      const previous = slides[current];
+      const direction = next > current ? 1 : -1;
+      current = next;
+      reset();
+      setStep(next + 1);
+      setLight(slides[next].dataset.theme === "light");
+      if (historyMode === "push") history.pushState(null, "", "#" + id);
+      document.querySelectorAll("video").forEach((video) => video.pause());
+      if (!motion.matches && previous !== slides[next]) {
+        busy = true;
+        root.setAttribute("aria-busy", "true");
+        previous.classList.add("is-outgoing");
+        const timing = {
+          duration: 620,
+          easing: "cubic-bezier(.65,0,.2,1)",
+          fill: "both" as const,
+        };
+        animations = [
+          previous.animate(
+            [
+              { transform: "translateY(0)" },
+              { transform: `translateY(${-100 * direction}%)` },
+            ],
+            timing,
+          ),
+          slides[next].animate(
+            [
+              { transform: `translateY(${100 * direction}%)` },
+              { transform: "translateY(0)" },
+            ],
+            timing,
+          ),
+        ];
+        Promise.allSettled(
+          animations.map((animation) => animation.finished),
+        ).then(() => {
+          if (!alive || revision !== token) return;
+          previous.classList.remove("is-outgoing");
+          animations.forEach((animation) => animation.cancel());
+          busy = false;
+          root.removeAttribute("aria-busy");
+          if (focus) focusHeading();
+        });
+      } else {
+        busy = false;
+        root.removeAttribute("aria-busy");
+        if (focus) focusHeading();
       }
-      const total = document.documentElement.scrollHeight - height;
-      if (progress.current)
-        progress.current.style.transform =
-          "scaleX(" + (total > 0 ? clamp(scrollY / total) : 1) + ")";
+      // Decode the next image ahead of its CTA transition, without fetching offsite assets.
+      cancelAnimationFrame(preloadFrame);
+      preloadFrame = requestAnimationFrame(() => {
+        slides[next + 1]?.querySelectorAll("img").forEach((image) => {
+          image.loading = "eager";
+          void image.decode().catch(() => {});
+        });
+      });
     };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    };
+    reset();
+    document.documentElement.dataset.guided = "true";
+    window.scrollTo(0, 0);
     const initialize = requestAnimationFrame(() => {
-      setChapters(
-        sections.map((section) => ({
-          id: section.id,
-          label: section.dataset.chapter || "",
-        })),
+      const id = location.hash.slice(1);
+      if (id) go(id, "none", false);
+    });
+    const onClick = (event: MouseEvent) => {
+      const link = (event.target as Element).closest<HTMLAnchorElement>(
+        "[data-next]",
       );
-      update();
-    });
-    const resize = new ResizeObserver(schedule);
-    resize.observe(document.body);
-    addEventListener("scroll", schedule, { passive: true });
-    addEventListener("resize", schedule);
-    motion.addEventListener("change", schedule);
-    document.fonts.ready.then(() => {
-      if (mounted) schedule();
-    });
+      if (!link || !root.contains(link)) return;
+      event.preventDefault();
+      if (busy || link.closest("[data-scene]") !== slides[current]) return;
+      go(link.dataset.next!);
+    };
+    const onHistory = () => go(location.hash.slice(1) || slides[0].id, "none");
+    const blockWheel = (event: WheelEvent) => {
+      // Dialogs may contain long practical information. They never advance the story.
+      if (!event.ctrlKey && !(event.target as Element).closest("dialog"))
+        event.preventDefault();
+    };
+    const onMotionChange = () => {
+      if (motion.matches) animations.forEach((animation) => animation.finish());
+    };
+    root.addEventListener("click", onClick);
+    root.addEventListener("wheel", blockWheel, { passive: false });
+    window.addEventListener("popstate", onHistory);
+    window.addEventListener("hashchange", onHistory);
+    motion.addEventListener("change", onMotionChange);
     return () => {
-      mounted = false;
+      alive = false;
+      revision++;
+      animations.forEach((animation) => animation.cancel());
       cancelAnimationFrame(initialize);
-      cancelAnimationFrame(frame);
-      resize.disconnect();
-      removeEventListener("scroll", schedule);
-      removeEventListener("resize", schedule);
-      motion.removeEventListener("change", schedule);
+      cancelAnimationFrame(preloadFrame);
+      delete document.documentElement.dataset.guided;
+      slides.forEach((slide) => {
+        slide.inert = false;
+        slide.removeAttribute("aria-hidden");
+        slide.classList.remove("is-active", "is-outgoing");
+      });
+      root.removeEventListener("click", onClick);
+      root.removeEventListener("wheel", blockWheel);
+      window.removeEventListener("popstate", onHistory);
+      window.removeEventListener("hashchange", onHistory);
+      motion.removeEventListener("change", onMotionChange);
     };
   }, []);
 
@@ -102,69 +181,26 @@ export function ExperienceRuntime() {
     return () => script.remove();
   }, []);
 
-  function goTo(index: number) {
-    const chapter = chapters[index];
-    if (!chapter) return;
-    document
-      .getElementById(chapter.id)
-      ?.scrollIntoView({
-        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "instant"
-          : "smooth",
-        block: "start",
-      });
-    history.replaceState(null, "", "#" + chapter.id);
-  }
-  const last = active === chapters.length - 1;
   return (
-    <>
-      <header className="site-header">
-        <a
-          href="#inicio"
-          className="wordmark"
-          aria-label="Casiciaco 45, volver al inicio"
+    <div className="experience">
+      <header className={"site-header" + (light ? " header-light" : "")}>
+        <span className="wordmark">
+          casiciaco<span>#{retreat.edition}</span>
+        </span>
+        <span
+          className="step-counter"
+          aria-label={`Pantalla ${step} de ${total}`}
         >
-          CASICIACO<span> / 45</span>
-        </a>
-        <a href="#invitacion" className="header-link">
-          La invitación
-          <Arrow direction="up-right" />
-        </a>
+          <strong>{String(step).padStart(2, "0")}</strong>
+          <span>/ {String(total).padStart(2, "0")}</span>
+        </span>
+        <div className="step-track" aria-hidden="true">
+          <span style={{ width: `${(step / total) * 100}%` }} />
+        </div>
       </header>
-      {chapters.length > 0 && (
-        <nav className="journey-nav" aria-label="Navegar el recorrido">
-          <button
-            type="button"
-            className="journey-previous"
-            aria-label="Capítulo anterior"
-            disabled={active === 0}
-            onClick={() => goTo(active - 1)}
-          >
-            <Arrow />
-          </button>
-          <div className="journey-location">
-            <span className="journey-count">
-              {String(active + 1).padStart(2, "0")}
-              <span> / {String(chapters.length).padStart(2, "0")}</span>
-            </span>
-            <span className="journey-label">{chapters[active]?.label}</span>
-          </div>
-          <button
-            type="button"
-            className="journey-next"
-            aria-label={
-              last ? "Volver al primer capítulo" : "Capítulo siguiente"
-            }
-            onClick={() => goTo(last ? 0 : active + 1)}
-          >
-            <span>{last ? "Inicio" : "Seguir"}</span>
-            <Arrow />
-          </button>
-        </nav>
-      )}
-      <div className="reading-progress" aria-hidden="true">
-        <div ref={progress} />
-      </div>
-    </>
+      <main id="recorrido" ref={stage} className="slide-stage" tabIndex={-1}>
+        {children}
+      </main>
+    </div>
   );
 }

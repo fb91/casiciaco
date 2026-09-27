@@ -1,15 +1,58 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { publicUrl, retreat, type Testimonial } from "@/config/retreat";
 import { track } from "@/lib/analytics";
 import { Arrow } from "./marks";
 
+function InfoDialog({
+  dialogRef,
+  id,
+  title,
+  children,
+  onClose,
+}: {
+  dialogRef: RefObject<HTMLDialogElement | null>;
+  id: string;
+  title: string;
+  children: ReactNode;
+  onClose?: () => void;
+}) {
+  return (
+    <dialog
+      ref={dialogRef}
+      id={id}
+      className="info-dialog"
+      aria-labelledby={id + "-title"}
+      onClose={onClose}
+    >
+      <div className="dialog-header">
+        <h2 id={id + "-title"}>{title}</h2>
+        <button
+          type="button"
+          className="dialog-close"
+          aria-label="Cerrar"
+          onClick={() => dialogRef.current?.close()}
+        >
+          ×
+        </button>
+      </div>
+      {children}
+    </dialog>
+  );
+}
+
 export function Choice() {
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
   const responses = [
-    "A veces, hacer una pausa es una buena forma de empezar.",
-    "Hay búsquedas que se viven mejor en compañía.",
-    "No tener una respuesta también puede ser un comienzo.",
+    "Un rato para bajar un cambio. Suena bien.",
+    "Compartir el camino también hace bien.",
+    "Está bien. No tenés que tener todo resuelto.",
   ];
   return (
     <div
@@ -18,41 +61,37 @@ export function Choice() {
       aria-label="¿Qué te gustaría encontrar?"
       data-clarity-mask="true"
     >
-      {retreat.copy.choice.options.map((option, i) => (
+      {retreat.copy.choice.options.map((option, index) => (
         <button
           key={option}
           type="button"
-          aria-pressed={selected === option}
-          onClick={() => setSelected(selected === option ? null : option)}
+          aria-pressed={selected === index}
+          onClick={() => setSelected(selected === index ? null : index)}
         >
-          <span className="choice-number">0{i + 1}</span>
+          <span className="choice-number">0{index + 1}</span>
           <span>{option}</span>
           <span className="choice-check" aria-hidden="true">
-            {selected === option ? "✓" : "+"}
+            {selected === index ? "✓" : "+"}
           </span>
         </button>
       ))}
       <p className="choice-response" aria-live="polite">
-        {selected
-          ? responses[
-              retreat.copy.choice.options.indexOf(
-                selected as (typeof retreat.copy.choice.options)[number],
-              )
-            ]
-          : "Elegí lo que hoy te resuene. Podés cambiar de idea."}
+        {selected === null
+          ? "No hay respuestas correctas. Podés cambiar de idea."
+          : responses[selected]}
       </p>
     </div>
   );
 }
 
 export function InvitationActions() {
-  const [shareOptions, setShareOptions] = useState(false);
   const [message, setMessage] = useState("");
-  const [registrationInfo, setRegistrationInfo] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const registration = publicUrl(retreat.registrationUrl);
   const contact = publicUrl(retreat.contactUrl);
   const manualLink = useRef<HTMLInputElement>(null);
+  const registrationDialog = useRef<HTMLDialogElement>(null);
+  const shareDialog = useRef<HTMLDialogElement>(null);
   function urlToShare() {
     const url = new URL(
       publicUrl(retreat.canonicalUrl) || window.location.origin,
@@ -70,7 +109,7 @@ export function InvitationActions() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "CASICIACO #45",
+          title: `CASICIACO #${retreat.edition}`,
           text: `¿Y si vamos? Casiciaco · ${retreat.dates.days} de noviembre · De ${retreat.age.min} a ${retreat.age.max} años.`,
           url,
         });
@@ -80,7 +119,7 @@ export function InvitationActions() {
         if (error instanceof Error && error.name === "AbortError") return;
       }
     }
-    setShareOptions(true);
+    shareDialog.current?.showModal();
   }
   async function copy() {
     try {
@@ -109,48 +148,58 @@ export function InvitationActions() {
           <button
             type="button"
             className="button-primary"
-            aria-expanded={registrationInfo}
+            aria-haspopup="dialog"
             aria-controls="registration-info"
             onClick={() => {
-              setRegistrationInfo(!registrationInfo);
+              registrationDialog.current?.showModal();
               track("registration_info");
             }}
           >
             {retreat.copy.cta}
             <Arrow direction="up-right" />
           </button>
-          <div
-            id="registration-info"
-            hidden={!registrationInfo}
-            className="registration-info"
-          >
-            <p>{retreat.registrationNote}</p>
-            {contact && (
-              <a href={contact}>
-                Consultar a JAR <Arrow direction="up-right" />
-              </a>
-            )}
-          </div>
           <p className="registration-status">
             Inscripción: información próximamente.
           </p>
+          <InfoDialog
+            dialogRef={registrationDialog}
+            id="registration-info"
+            title="Cómo sumarte"
+          >
+            <p>{retreat.registrationNote}</p>
+            {contact && (
+              <a className="text-button" href={contact}>
+                Consultar a JAR <Arrow direction="up-right" />
+              </a>
+            )}
+          </InfoDialog>
         </>
       )}
       <div className="share-row">
         <p>{retreat.copy.share}</p>
-        <button type="button" className="text-button" onClick={share}>
+        <button
+          type="button"
+          className="text-button"
+          aria-haspopup="dialog"
+          onClick={share}
+        >
           Compartir <Arrow direction="up-right" />
         </button>
       </div>
-      {shareOptions && (
+      <InfoDialog
+        dialogRef={shareDialog}
+        id="share-dialog"
+        title="¿Y si van juntos?"
+      >
         <div className="share-options">
           <a
-            href={`https://wa.me/?text=${encodeURIComponent(`¿Y si vamos? CASICIACO #45 · 13–15 noviembre 2026. ${shareUrl}`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(`¿Y si vamos? CASICIACO #${retreat.edition} · ${retreat.dates.days} de noviembre de ${retreat.dates.year}. ${shareUrl}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => track("share_whatsapp")}
           >
-            Enviar por WhatsApp <Arrow direction="up-right" />
+            Enviar por WhatsApp
+            <Arrow direction="up-right" />
           </a>
           <button type="button" onClick={copy}>
             Copiar enlace
@@ -166,34 +215,116 @@ export function InvitationActions() {
             onFocus={(event) => event.currentTarget.select()}
           />
         </div>
-      )}
-      <p role="status" className="share-status">
-        {message}
-      </p>
+        <p role="status" className="share-status">
+          {message}
+        </p>
+      </InfoDialog>
     </div>
   );
 }
 
-export function TestimonialGallery({ items }: { items: Testimonial[] }) {
-  const [open, setOpen] = useState(false);
+function PracticalDetails() {
+  const contact = publicUrl(retreat.contactUrl);
+  return (
+    <>
+      <dl>
+        <div>
+          <dt>Fecha</dt>
+          <dd>
+            {retreat.dates.days} de noviembre de {retreat.dates.year}
+          </dd>
+        </div>
+        <div>
+          <dt>Edad</dt>
+          <dd>
+            De {retreat.age.min} a {retreat.age.max} años
+          </dd>
+        </div>
+        <div>
+          <dt>Lugar</dt>
+          <dd>{retreat.venue || "A confirmar por la organización."}</dd>
+        </div>
+        <div>
+          <dt>Costo</dt>
+          <dd>{retreat.price || "A confirmar por la organización."}</dd>
+        </div>
+        <div>
+          <dt>Horarios</dt>
+          <dd>{retreat.schedule || "A confirmar por la organización."}</dd>
+        </div>
+      </dl>
+      {retreat.practicalNotes && (
+        <p>
+          <strong>Qué llevar</strong>
+          <br />
+          {retreat.practicalNotes}
+        </p>
+      )}
+      {contact && (
+        <a className="text-button" href={contact}>
+          Consultar a JAR
+          <Arrow direction="up-right" />
+        </a>
+      )}
+    </>
+  );
+}
+export function PracticalInfo() {
+  const dialog = useRef<HTMLDialogElement>(null);
   return (
     <>
       <button
-        className="button-outline"
-        aria-expanded={open}
-        aria-controls="testimonials"
-        onClick={() => setOpen(!open)}
+        type="button"
+        className="text-button practical-trigger"
+        aria-haspopup="dialog"
+        onClick={() => dialog.current?.showModal()}
       >
-        {open ? "Cerrar experiencias" : "Escuchar sus experiencias"}{" "}
+        Ver detalles del retiro <Arrow direction="up-right" />
+      </button>
+      <InfoDialog
+        dialogRef={dialog}
+        id="practical-info"
+        title="Lo que necesitás saber"
+      >
+        <PracticalDetails />
+      </InfoDialog>
+      <noscript>
+        <details className="no-js-info">
+          <summary>Ver detalles del retiro</summary>
+          <PracticalDetails />
+        </details>
+      </noscript>
+    </>
+  );
+}
+
+export function TestimonialGallery({ items }: { items: Testimonial[] }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  return (
+    <>
+      <button
+        type="button"
+        className="button-outline"
+        aria-haspopup="dialog"
+        onClick={() => dialog.current?.showModal()}
+      >
+        Escuchar sus experiencias
         <Arrow direction="right" />
       </button>
-      <a className="text-button" href="#invitacion">
-        Seguir a la invitación <Arrow direction="down" />
-      </a>
-      <div id="testimonials" hidden={!open}>
-        {open &&
-          items.map((item) => <TestimonialVideo key={item.id} item={item} />)}
-      </div>
+      <InfoDialog
+        dialogRef={dialog}
+        id="testimonials"
+        title="Así lo vivieron"
+        onClose={() =>
+          dialog.current
+            ?.querySelectorAll("video")
+            .forEach((video) => video.pause())
+        }
+      >
+        {items.map((item) => (
+          <TestimonialVideo key={item.id} item={item} />
+        ))}
+      </InfoDialog>
     </>
   );
 }
@@ -201,28 +332,23 @@ function TestimonialVideo({ item }: { item: Testimonial }) {
   const video = useRef<HTMLVideoElement>(null);
   const [near, setNear] = useState(false);
   useEffect(() => {
-    const el = video.current;
-    if (!el) return;
-    const load = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) setNear(true);
-      },
-      { rootMargin: "300px" },
-    );
-    const pause = new IntersectionObserver((entries) =>
-      entries.forEach((e) => {
-        if (!e.isIntersecting) el.pause();
-      }),
+    const element = video.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setNear(true);
+          else element.pause();
+        }),
+      { rootMargin: "200px" },
     );
     const onHidden = () => {
-      if (document.hidden) el.pause();
+      if (document.hidden) element.pause();
     };
-    load.observe(el);
-    pause.observe(el);
+    observer.observe(element);
     document.addEventListener("visibilitychange", onHidden);
     return () => {
-      load.disconnect();
-      pause.disconnect();
+      observer.disconnect();
       document.removeEventListener("visibilitychange", onHidden);
     };
   }, []);
@@ -237,8 +363,8 @@ function TestimonialVideo({ item }: { item: Testimonial }) {
         poster={item.poster}
         src={near ? item.video : undefined}
         onPlay={() => {
-          document.querySelectorAll("video").forEach((el) => {
-            if (el !== video.current) el.pause();
+          document.querySelectorAll("video").forEach((element) => {
+            if (element !== video.current) element.pause();
           });
           track("testimonial_play");
         }}

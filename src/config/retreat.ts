@@ -19,7 +19,7 @@ export const retreat = {
     start: "2026-11-13",
     end: "2026-11-15",
   },
-  age: { min: 18, max: 30 },
+  age: { min: 16, max: 30 },
   organization: {
     short: "JAR",
     name: "Juventud Agustino Recoleta",
@@ -27,13 +27,19 @@ export const retreat = {
     parish: "Parroquia Nuestra Señora de Luján",
     city: "Rosario",
   },
-  // TODO organizers: exact location, cost, schedule, transport and overnight details.
-  venue: null as string | null,
+  // Venue and packing list verified in the Google Form linked by the official flyer QR.
+  venue:
+    "Colegio Nuestra Señora de Luján · Av. Perón 3320 Oeste, Rosario, Santa Fe" as
+      string | null,
   price: null as string | null,
   schedule: null as string | null,
-  practicalNotes: null as string | null,
-  // TODO organizers: official HTTPS registration URL and contact URL.
-  registrationUrl: null as string | null,
+  practicalNotes:
+    "Traé ropa cómoda, bolsa de dormir o colchón inflable, elementos de higiene personal, plato, vaso y cubiertos, cartuchera y Biblia." as
+      string | null,
+  // Official form decoded from the QR in instagram.com/p/DdpoV2Qz40q/.
+  registrationUrl:
+    "https://docs.google.com/forms/d/e/1FAIpQLSeEdv-2l_ax-kgsCZyvjgd_wui_nuxcj775NhAPs7mGkWb5TQ/viewform" as
+      string | null,
   contactUrl: null as string | null,
   registrationNote: "La información para anotarte estará disponible acá.",
   canonicalUrl:
@@ -44,8 +50,8 @@ export const retreat = {
   analytics: {
     provider: "clarity",
     projectId: process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || null,
-    // The organizer corrected the audience to 18–30. Requires a real project ID.
-    enabled: true,
+    // Official flyer includes minors; keep session recording disabled.
+    enabled: false,
   },
   // TODO: organizer approval required before these answers appear publicly.
   questions: [
@@ -138,7 +144,7 @@ export const retreat = {
     jesus: ["Y a conocer", "a Jesús."],
     description: "Casiciaco es un retiro católico juvenil.",
     invitation: ["Date", "lugar."],
-    cta: "QUIERO VIVIR CASICIACO",
+    cta: "Quiero anotarme",
     share: "¿A quién invitarías?",
   },
 } as const;

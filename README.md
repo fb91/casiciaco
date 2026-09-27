@@ -1,6 +1,6 @@
 # CASICIACO #45 · La inquietud
 
-Micro-landing narrativa para el retiro juvenil JAR de la Parroquia Nuestra Señora de Luján, Rosario. **13, 14 y 15 de noviembre de 2026 · 18–30 años** (edad corregida por el organizador).
+Experiencia narrativa para el retiro juvenil JAR de la Parroquia Nuestra Señora de Luján, Rosario. **13, 14 y 15 de noviembre de 2026 · 16–30 años**, según el flyer y el formulario oficiales.
 
 ## Desarrollo
 
@@ -21,7 +21,7 @@ npx playwright install chromium
 npm test
 ```
 
-Next.js App Router + TypeScript + Tailwind. Página prerenderizada; sin backend, DB, login ni CMS. Fuentes e imágenes WebP locales. Ocho capítulos con scroll nativo, composiciones sticky, parallax y botones anterior/siguiente. No intercepta gestos ni necesita librerías de animación o embeds de redes sociales.
+Next.js App Router + TypeScript + Tailwind. Página prerenderizada; sin backend, DB, login ni CMS. Fuentes e imágenes WebP locales. Ocho pantallas que avanzan solo mediante su CTA, con transición vertical, foco gestionado y escenas inactivas fuera de la navegación por teclado. Scroll de página bloqueado; el detalle práctico y compartir se abren en diálogos. Sin librerías de animación ni embeds de redes sociales.
 
 ## Editar contenido
 
@@ -29,13 +29,13 @@ Next.js App Router + TypeScript + Tailwind. Página prerenderizada; sin backend,
 
 Antes de lanzar la campaña:
 
-- [ ] URL HTTPS de inscripción: `registrationUrl`. Hasta entonces el botón explica que la información estará disponible, sin simular una inscripción.
-- [ ] Sede, precio, horarios, traslado/pernocte y contacto oficial.
+- [x] URL oficial de inscripción, obtenida del QR del flyer y verificada en Google Forms.
+- [x] Sede y lista para llevar, obtenidas del formulario oficial.
+- [ ] Precio, horarios, traslado y contacto oficial.
 - [ ] Aprobar las tres respuestas rápidas: `questions[].approved = true`.
 - [ ] Cargar de 3 a 5 testimonios reales y autorizados. Cada uno requiere `name`, `video`, `poster`, `captions` (VTT), `transcript`, `approved: true`. Se ocultan hasta estar completos.
 - [ ] Complementar las imágenes conceptuales con material real autorizado. No presentar las imágenes generadas como sede del retiro ni fotos de participantes.
-- [ ] ID de Clarity y URL canónica definitiva.
-- [ ] Confirmar destino de los QR del flyer; actualizarlo a la landing si corresponde.
+- [ ] Dominio propio, si se decide utilizar uno.
 
 La landing funciona aunque esos campos falten; no muestra testimonios ficticios ni respuestas sin aprobar. Los ocho capítulos públicos van desde la búsqueda personal hasta la invitación. La navegación incorpora automáticamente testimonios y preguntas cuando se aprueban.
 
@@ -54,7 +54,7 @@ Redeploy después de cambiar variables `NEXT_PUBLIC_*`. Producción usa `https:/
 
 ## Clarity / Smart Events
 
-La API `window.clarity('event', nombre)` genera API events visibles entre los Smart Events. La integración solo carga con un ID válido, `analytics.enabled` y audiencia mínima de 18 años. Está preparada y habilitada en configuración para la audiencia **18–30**, pero sin ID no hace ninguna petición a Clarity.
+Clarity está deshabilitado para la audiencia **16–30** confirmada en el flyer. La integración existente exige además un ID válido y una edad mínima de 18 años; no se carga ni registra la selección personal de esta experiencia.
 
 Eventos: `registration_click` (salida al formulario, no inscripción confirmada), `registration_info` (consulta mientras no hay formulario), `share_open`, `share_handoff` (API resuelta, no recepción confirmada), `share_whatsapp`, `copy_link`, `testimonial_play`, `testimonial_complete`.
 
@@ -65,9 +65,9 @@ En Clarity: Settings → Smart events para revisar los API events; el SDK se car
 ## UX y accesibilidad
 
 - Flujo principal de aproximadamente 60–90 segundos, sin tiempos forzados; testimonios opcionales.
-- Un solo scroll, anchors accesibles, `min-height` adaptable y nunca bloqueo de gestos.
+- Avance exclusivo por el CTA de cada pantalla; sin menú flotante. Rueda, swipe y teclas de scroll no cambian de pantalla. Enter activa el CTA y el historial del navegador permite volver.
 - Texto esencial visible sin JavaScript. Los enlaces y el detalle práctico siguen funcionando.
-- Reduced motion elimina animaciones, parallax y fijación de escenas; foco visible y controles con targets de al menos 44 px.
+- Reduced motion detiene los bucles de palabras y otros movimientos; las transiciones entre pantallas son inmediatas. Se conservan zoom, foco visible y cierre de diálogos con Escape.
 - Videos con controles, subtítulos y transcripción; se cargan solo cerca de ellos, se pausan al salir de pantalla y no se reproducen simultáneamente.
 - Compartir con Web Share; si no existe/falla, WhatsApp y portapapeles. Cancelar Web Share no abre otras aplicaciones.
 - Sin música ni video automático de fondo.
@@ -82,7 +82,7 @@ La estancia de Casiciaco fue posterior a la conversión y anterior al bautismo. 
 
 ## Assets
 
-Imágenes actuales creadas con la herramienta integrada ImageGen y optimizadas a WebP (aproximadamente 650 KiB entre las cuatro; Next.js entrega tamaños adaptados): `journey.webp`, `augustine.webp`, `cassiciacum.webp`, `encounter.webp`. Dirección visual, naturaleza conceptual y prompts completos en [docs/visual-direction.md](docs/visual-direction.md).
+Imágenes actuales creadas con la herramienta integrada ImageGen y optimizadas a WebP (aproximadamente 652 KiB entre las cuatro; Next.js entrega tamaños adaptados): `friends.webp`, `augustine.webp`, `cassiciacum.webp`, `encounter.webp`. Dirección visual, fuentes del flyer, naturaleza conceptual y prompts completos en [docs/visual-direction.md](docs/visual-direction.md). `journey.webp` se conserva de la portada anterior.
 
 Fotografías de Unsplash conservadas de la versión anterior, actualmente sin uso:
 
@@ -90,7 +90,7 @@ Fotografías de Unsplash conservadas de la versión anterior, actualmente sin us
 - https://images.unsplash.com/photo-1448375240586-882707db888b (luz en el bosque)
 - Licencia: https://unsplash.com/license
 
-No representan participantes ni la sede real. El antiguo SVG de Agustín fue reemplazado por un retrato cinematográfico. Manrope e Instrument Serif se sirven localmente vía Fontsource; sus licencias acompañan los paquetes.
+No representan participantes ni la sede real. El antiguo SVG de Agustín fue reemplazado por un retrato cinematográfico. Manrope se sirve localmente vía Fontsource; su licencia acompaña el paquete. La portada usa una escena conceptual de amigos al aire libre.
 
 ## Vista previa y validación
 
