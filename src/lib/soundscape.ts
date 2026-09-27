@@ -122,13 +122,17 @@ export const soundscape = {
   get active() {
     return on && !!engine;
   },
-  /** 0..1 levels for the restless noise and the calm pad. */
-  setMix(noise: number, calm: number) {
+  /** 0..1 levels for the restless noise and the calm pad; `immediate` cuts in ~0.2 s. */
+  setMix(noise: number, calm: number, immediate = false) {
     mix = { noise, calm };
     if (!engine) return;
     const now = engine.context.currentTime;
-    engine.noise.gain.setTargetAtTime(noise * 0.55, now, 0.25);
-    engine.calm.gain.setTargetAtTime(calm * 0.8, now, 0.8);
+    engine.noise.gain.setTargetAtTime(
+      noise * 0.55,
+      now,
+      immediate ? 0.05 : 0.25,
+    );
+    engine.calm.gain.setTargetAtTime(calm * 0.8, now, immediate ? 0.05 : 0.8);
   },
   /** A notification blip. */
   ping() {

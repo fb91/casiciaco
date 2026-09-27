@@ -169,7 +169,7 @@ export const retreat = {
     },
     room: ["Tres días", "para hacer lugar."],
     moments: ["A una charla.", "A otros.", "A tus preguntas."],
-    jesus: ["Y a conocer", "a Jesús."],
+    jesus: ["Conocer", "a Jesús."],
     description: "Casiciaco es un retiro católico juvenil.",
     invitation: ["Date", "lugar."],
     // Invitation subtitle, story card line and share text follow the visitor's choice.
@@ -188,63 +188,36 @@ export const retreat = {
     cta: "Quiero anotarme",
     share: "¿A quién invitarías?",
   },
-  // Stops of Augustine's search, told for a 16–30 audience. Facts from the Confessions.
+  // Stops of Augustine's search: one short line each, facts from the Confessions.
   timeline: [
     {
       year: "354",
-      place: "Tagaste, norte de África",
+      place: "Tagaste",
       title: "Un pibe inquieto.",
-      text: "Nace en lo que hoy es Argelia. De adolescente se roba unas peras solo por el gusto de hacerlo. Lo cuenta él mismo, sin filtro.",
+      text: "Curioso, rebelde y con mil preguntas.",
     },
     {
       year: "371",
       place: "Cartago",
-      title: "La gran ciudad.",
-      text: "Se va a estudiar lejos. Fiestas, teatro, ganas de ser alguien. Se enamora y a los 18 es papá de Adeodato.",
-    },
-    {
-      year: "373",
-      place: "Buscando respuestas",
-      title: "Prueba de todo.",
-      text: "Un libro lo enciende y empieza a buscar la verdad. Se suma a una secta, cambia de ideas, discute con todos. Nada le cierra del todo.",
+      title: "Ganas de ser alguien.",
+      text: "Estudia, sale, se enamora. A los 18 es papá.",
     },
     {
       year: "384",
-      place: "Roma · Milán",
+      place: "Milán",
       title: "Le va bien. ¿Y?",
-      text: "Profesor exitoso en la capital del imperio. Por fuera, todo resuelto. Por dentro, el ruido sigue. Su mamá, Mónica, reza por él hace años.",
-    },
-    {
-      year: "386",
-      place: "Un jardín en Milán",
-      title: "«Tomá y leé».",
-      text: "Llorando, escucha a un chico cantar esas palabras. Abre la Biblia. Algo se acomoda por dentro.",
+      text: "Por fuera, todo resuelto. Por dentro, el ruido sigue.",
     },
     {
       year: "386",
       place: "Casiciaco",
       title: "Paró. Y no fue solo.",
-      text: "Se retira al campo unos meses con su mamá, su hijo y sus amigos. A charlar, pensar y rezar. Ese lugar se llamaba Casiciaco. De ahí viene el nombre de este retiro.",
+      text: "Se fue al campo con su familia y amigos. De ahí viene el nombre del retiro.",
     },
   ],
-  // General shape of the weekend, from the official flyer. Detailed schedule: `schedule`.
-  days: [
-    {
-      day: "Viernes",
-      title: "Llegar.",
-      text: "Dejás la mochila, conocés gente nueva y arrancan los primeros mates.",
-    },
-    {
-      day: "Sábado",
-      title: "Hacer lugar.",
-      text: "Charlas, música, juegos y ratos para vos. Para preguntar lo que tengas ganas.",
-    },
-    {
-      day: "Domingo",
-      title: "Encontrarte.",
-      text: "Compartir la fe, celebrar juntos y volver a casa con algo nuevo.",
-    },
-  ],
+  // The weekend is not described on purpose: it is lived, not told.
+  days: ["Viernes", "Sábado", "Domingo"],
+  daysTeaser: "Qué pasa cada día no te lo contamos: se vive. Vení con ganas.",
 } as const;
 
 export function approvedTestimonials(): Testimonial[] {

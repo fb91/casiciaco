@@ -1167,7 +1167,7 @@ html[data-enhanced] .heart-scene {
   box-shadow: 0 -10px 40px #24483e1a;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: space-between;
   transform: rotate(calc((var(--i) - 1) * 1.4deg));
 }
 .day-card:last-child {
@@ -1180,24 +1180,26 @@ html[data-enhanced] .heart-scene {
   background: var(--accent);
 }
 .day-name {
-  margin-bottom: auto;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 850;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
-.day-card h3 {
+.day-mystery {
   font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: clamp(60px, 9vw, 120px);
-  line-height: 0.95;
-  letter-spacing: -0.02em;
+  font-style: italic;
+  font-size: clamp(140px, 22vw, 280px);
+  line-height: 0.8;
 }
-.day-card p {
-  margin-top: 14px;
-  max-width: 26em;
-  font-size: 17px;
-  line-height: 1.55;
+.days-teaser {
+  max-width: 760px;
+  margin: 12svh auto 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(30px, 4vw, 52px);
+  line-height: 1.15;
+  text-align: center;
+  text-wrap: balance;
 }
 
 /* ---------- 9 · Encounter ---------- */

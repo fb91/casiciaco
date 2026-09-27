@@ -13,4 +13,4 @@
 
 ## Límites editoriales visibles
 
-El CTA de inscripción enlaza al formulario oficial del QR del flyer. Costo y horarios siguen «A confirmar por la organización». Las respuestas de preguntas frecuentes y la descripción de los tres días son una propuesta a revisar por la organización. Los testimonios sin aprobación no se publican.
+El CTA de inscripción enlaza al formulario oficial del QR del flyer. Costo y horarios siguen «A confirmar por la organización». Las respuestas de preguntas frecuentes son una propuesta a revisar por la organización. Los tres días no se describen a propósito. Los testimonios sin aprobación no se publican.

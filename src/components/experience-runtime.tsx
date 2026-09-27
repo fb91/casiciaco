@@ -128,10 +128,13 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       const state = storyState.get();
       if (!state.silenced && y < vh * 0.8)
         noiseLevel = Math.max(noiseLevel, 0.15);
-      if (!state.silenced && live.hold > 0)
-        noiseLevel = Math.max(0.05, 0.6 * (1 - live.hold));
-      const calm = state.silenced ? 1 : live.hold;
-      soundscape.setMix(state.silenced ? 0 : noiseLevel, calm);
+      // Holding for silence means real silence: every layer goes quiet at once.
+      if (!state.silenced && live.hold > 0) soundscape.setMix(0, 0, true);
+      else
+        soundscape.setMix(
+          state.silenced ? 0 : noiseLevel,
+          state.silenced ? 1 : 0,
+        );
 
       // Restless heart that slows down as the quote completes.
       if (heart && heartScene && visible.has(heartScene)) {

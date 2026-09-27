@@ -201,8 +201,7 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
             <Tag>ANTES DE SER SANTO</Tag>
             <Rise id="agustin-title" lines={copy.augustine} className="serif" />
             <p className="slide-description" data-reveal>
-              No era un santito de estampita. Era un pibe con preguntas, como
-              vos. Esta es su búsqueda.
+              Un pibe con preguntas, como vos.
             </p>
           </div>
         </Scene>
@@ -287,16 +286,20 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
           <ol className="day-cards">
             {retreat.days.map((day, index) => (
               <li
-                key={day.day}
+                key={day}
                 className={"day-card day-" + index}
                 style={{ "--i": index } as Vars}
               >
-                <span className="day-name">{day.day}</span>
-                <h3>{day.title}</h3>
-                <p>{day.text}</p>
+                <h3 className="day-name">{day}</h3>
+                <span className="day-mystery" aria-hidden="true">
+                  ?
+                </span>
               </li>
             ))}
           </ol>
+          <p className="days-teaser" data-reveal>
+            {retreat.daysTeaser}
+          </p>
         </Scene>
 
         <Scene id="jesus" className="encounter" dark pin data-flashlight>
@@ -311,12 +314,7 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
           </div>
           <div className="encounter-dark" aria-hidden="true" />
           <div className="encounter-content">
-            <Tag>EL CENTRO DEL RETIRO</Tag>
             <Rise id="jesus-title" lines={copy.jesus} className="serif" />
-            <p className="slide-description" data-reveal>
-              Entre las charlas, la música y los mates, hay lugar para lo más
-              importante: encontrarte con Alguien que ya te estaba buscando.
-            </p>
             <p className="encounter-hint" aria-hidden="true">
               Mové el dedo. Hacé lugar a la luz.
             </p>

@@ -33,7 +33,7 @@ Una sola página que se scrollea como un relato, del ruido a la calma:
 4. **Agustín**: retrato y línea de tiempo horizontal (354 → 386) guiada por el scroll vertical.
 5. **Corazón inquieto**: la cita se enciende palabra por palabra sobre un latido que se calma.
 6. **¿Y vos?**: la elección cambia el texto de la invitación y la placa para historias.
-7. **Tres días** (viernes, sábado, domingo) en tarjetas que se apilan.
+7. **Tres días**: viernes, sábado y domingo en tarjetas que se apilan, sin contar qué pasa en cada uno.
 8. **Encuentro**: pantalla oscura donde el dedo o el mouse funcionan como una linterna.
 9. **Preguntas frecuentes** y testimonios (cuando estén aprobados).
 10. **Date lugar.**: inscripción, placa 9:16 para historias (`/historia/[libre|0|1|2]`), invitación personalizada por WhatsApp o enlace, y datos prácticos.
@@ -51,7 +51,7 @@ Antes de lanzar la campaña:
 - [x] URL oficial de inscripción, obtenida del QR del flyer y verificada en Google Forms.
 - [x] Sede y lista para llevar, obtenidas del formulario oficial.
 - [ ] Precio, horarios, traslado y contacto oficial.
-- [ ] Revisar las respuestas de `questions` (ya visibles con `approved: true`) y la descripción de `days`.
+- [ ] Revisar las respuestas de `questions` (ya visibles con `approved: true`).
 - [ ] `contactUrl`: WhatsApp de una persona real de la organización.
 - [ ] Cambiar `indexable` a `true` cuando la página esté lista para buscadores.
 - [ ] Cargar de 3 a 5 testimonios reales y autorizados. Cada uno requiere `name`, `video`, `poster`, `captions` (VTT), `transcript`, `approved: true`. Se ocultan hasta estar completos.
