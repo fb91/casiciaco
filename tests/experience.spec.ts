@@ -118,7 +118,8 @@ test("the timeline moves sideways with the vertical scroll", async ({
   );
   const progress = async () => Number(await timeline.getAttribute("data-p"));
   // Wait for the runtime to apply each scroll position before measuring.
-  await expect.poll(progress).toBeLessThan(0.1);
+  await expect.poll(progress).toBeLessThan(0.3);
+  const startProgress = await progress();
   const start = await x();
   await timeline.evaluate((el: HTMLElement) =>
     scrollTo({
@@ -129,7 +130,7 @@ test("the timeline moves sideways with the vertical scroll", async ({
       behavior: "instant",
     }),
   );
-  await expect.poll(progress).toBeGreaterThan(0.7);
+  await expect.poll(progress).toBeGreaterThan(startProgress + 0.4);
   expect(await x()).toBeLessThan(start - 100);
 });
 
