@@ -17,7 +17,7 @@ import {
   TestimonialBubble,
   TestimonialStories,
 } from "@/components/testimonials";
-import { Arrow } from "@/components/marks";
+import { Arrow, Spark } from "@/components/marks";
 
 const copy = retreat.copy;
 type Vars = CSSProperties & Record<`--${string}`, string | number>;
@@ -108,7 +108,7 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
         <div className="hero-content">
           {inviter ? (
             <p className="inviter">
-              <span aria-hidden="true">✳</span> {inviter} te invita
+              <Spark /> {inviter} te invita
             </p>
           ) : (
             <Tag>RETIRO CATÓLICO JUVENIL · JAR · ROSARIO</Tag>
@@ -138,7 +138,7 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
                     {words.map((word) => (
                       <span key={word}>
                         {word}
-                        <i>✳</i>
+                        <Spark />
                       </span>
                     ))}
                   </div>

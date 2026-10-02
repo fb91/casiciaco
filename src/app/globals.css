@@ -525,6 +525,7 @@ html[data-enhanced]:not([data-started]) .hero {
 }
 .inviter {
   display: inline-flex;
+  align-self: flex-start;
   gap: 8px;
   align-items: center;
   margin-bottom: 20px;
@@ -803,9 +804,14 @@ html[data-enhanced] .noise {
 .row-1 .marquee-copy span {
   -webkit-text-stroke-width: 1.5px;
 }
-.marquee-copy i {
-  font-style: normal;
-  font-size: 0.5em;
+.spark {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+.marquee-copy .spark {
+  width: 0.42em;
+  height: 0.42em;
   color: var(--ink);
 }
 .notifications {
