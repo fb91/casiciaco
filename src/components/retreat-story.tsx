@@ -9,6 +9,7 @@ import {
   InvitationActions,
   InvitationLine,
   PracticalDetails,
+  RestartButton,
   ShareStudio,
   StartButton,
 } from "@/components/interactions";
@@ -179,6 +180,10 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
             Todo el día <span>a mil.</span>
           </h2>
         </div>
+        {/* Shown by the runtime when the visitor stops scrolling for a few seconds. */}
+        <p className="scroll-nudge" aria-hidden="true">
+          Seguí deslizando <Arrow />
+        </p>
         {/* Everything else fades away so this can be read. */}
         <p className="noise-end">
           {copy.noiseEnd.lines.map((line, index) => (
@@ -242,9 +247,6 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
           <div className="choice-intro">
             <Tag>{copy.choice.title.toUpperCase()}</Tag>
             <Rise id="vos-title" lines={["¿Qué te gustaría", "encontrar?"]} />
-            <p className="slide-description" data-reveal>
-              Elegí lo que te resuene. Lo vamos a tener en cuenta al final.
-            </p>
           </div>
           <Choice />
         </Scene>
@@ -434,9 +436,7 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
             <br />
             {organization.order} · {organization.parish} · {organization.city}
           </p>
-          <a href="#inicio">
-            Volver arriba <Arrow direction="up" />
-          </a>
+          <RestartButton />
         </footer>
       </div>
     </ExperienceRuntime>

@@ -104,6 +104,10 @@ export const storyState = {
     document.documentElement.dataset.silence = "open";
     set({ silenced: true });
   },
+  /** Forgets this visit (start, silence, choice): the next load starts from zero. */
+  reset() {
+    [startKey, silenceKey, choiceKey].forEach((key) => write(key, null));
+  },
   subscribe(listener: () => void) {
     listeners.add(listener);
     return () => listeners.delete(listener);

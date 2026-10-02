@@ -13,11 +13,15 @@ import {
   type Testimonial,
 } from "@/config/testimonials";
 import { track } from "@/lib/analytics";
+import { soundscape } from "@/lib/soundscape";
 import { Arrow } from "./marks";
 
 type Vars = CSSProperties & Record<`--${string}`, string | number>;
 const reducedMotion = () =>
   matchMedia("(prefers-reduced-motion: reduce)").matches;
+/** The calm loop steps aside while a video plays with sound. */
+const duckFor = (video: HTMLVideoElement) =>
+  soundscape.duck(!video.paused && !video.ended && !video.muted);
 /** Reading time for a text story: about a third of a second per word. */
 const readingTime = (text: string) =>
   Math.min(18000, Math.max(6500, text.split(/\s+/).length * 330));
@@ -123,6 +127,8 @@ function Stories({
       resize.disconnect();
     };
   }, [last, select]);
+
+  useEffect(() => () => soundscape.duck(false), []);
 
   // Inline stories only run while most of them is on screen.
   useEffect(() => {
@@ -282,11 +288,6 @@ function Stories({
           >
             {paused ? <PlayIcon /> : <PauseIcon />}
           </button>
-          {modal && (
-            <button type="button" aria-label="Cerrar" onClick={onClose}>
-              <CloseIcon />
-            </button>
-          )}
         </div>
       </div>
       <div
@@ -329,9 +330,13 @@ function Stories({
                     document.querySelectorAll("video").forEach((element) => {
                       if (element !== event.currentTarget) element.pause();
                     });
+                    duckFor(event.currentTarget);
                     track("testimonial_play");
                   }}
-                  onEnded={() => {
+                  onPause={(event) => duckFor(event.currentTarget)}
+                  onVolumeChange={(event) => duckFor(event.currentTarget)}
+                  onEnded={(event) => {
+                    duckFor(event.currentTarget);
                     track("testimonial_complete");
                     if (!reducedMotion()) advance();
                   }}
@@ -384,7 +389,7 @@ function Stories({
   );
 }
 
-/** Full-screen stories, opened from the floating bubble. */
+/** One testimonial in focus, opened from the floating bubble: the page stays behind it. */
 function StoriesDialog({
   start,
   onClose,
@@ -410,12 +415,21 @@ function StoriesDialog({
       }}
     >
       {start !== null && (
-        <Stories
-          items={testimonials}
-          start={start}
-          modal
-          onClose={() => dialog.current?.close()}
-        />
+        <div className="stories-sheet">
+          <button
+            type="button"
+            className="stories-close"
+            onClick={() => dialog.current?.close()}
+          >
+            Cerrar <CloseIcon />
+          </button>
+          <Stories
+            items={testimonials}
+            start={start}
+            modal
+            onClose={() => dialog.current?.close()}
+          />
+        </div>
       )}
     </dialog>
   );

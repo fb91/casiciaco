@@ -1,11 +1,12 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { publicUrl, retreat } from "@/config/retreat";
+import { retreat } from "@/config/retreat";
 import { track } from "@/lib/analytics";
 import { live, storyState, useStory } from "@/lib/story-state";
 import { soundscape } from "@/lib/soundscape";
 import { Arrow } from "@/components/marks";
+import { RegistrationLink } from "@/components/interactions";
 
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
 
@@ -21,7 +22,6 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
   const started = useStory((state) => state.started);
   const sound = useStory((state) => state.sound);
   const audible = useStory((state) => state.audible);
-  const registration = publicUrl(retreat.registrationUrl);
 
   useEffect(() => {
     const root = stage.current!;
@@ -133,8 +133,10 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       if (silence && visible.has(silence))
         noiseLevel = Math.max(noiseLevel, 0.85);
       // Holding, and everything after the silence, is real silence: volume zero.
-      if (state.silenced || live.hold > 0) soundscape.setLevel(0, true);
-      else soundscape.setLevel(noiseLevel);
+      // Holding fades the noise little by little (the buzz goes first, then the murmur);
+      // after the silence it is gone for good.
+      if (state.silenced) soundscape.setLevel(0);
+      else soundscape.setLevel(noiseLevel * (1 - live.hold) ** 1.4);
 
       const animating =
         (!reduced && marquees.some((marquee) => visible.has(marquee))) ||
@@ -244,6 +246,26 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       window.addEventListener(name, moved, { passive: true, once: true }),
     );
 
+    // In the noise, if the visitor stops scrolling for 3 seconds, a nudge invites them on.
+    let lastMove = performance.now();
+    const moving = () => {
+      lastMove = performance.now();
+      noise?.removeAttribute("data-idle");
+    };
+    const idle = window.setInterval(() => {
+      if (!noise) return;
+      const rect = noise.getBoundingClientRect();
+      const inside =
+        storyState.get().started &&
+        rect.top <= 1 &&
+        rect.bottom >= innerHeight - 1;
+      noise.toggleAttribute(
+        "data-idle",
+        inside && performance.now() - lastMove > 3000,
+      );
+    }, 400);
+    window.addEventListener("scroll", moving, { passive: true });
+
     const onResize = () => {
       measure();
       keepAnchor();
@@ -252,9 +274,13 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
     measure();
     keepAnchor();
     void document.fonts?.ready.then(onResize);
-    const unsubscribe = storyState.subscribe(() =>
-      requestAnimationFrame(onResize),
-    );
+    // After the silence, the calm loop.
+    const syncCalm = () => soundscape.setCalm(storyState.get().silenced);
+    syncCalm();
+    const unsubscribe = storyState.subscribe(() => {
+      syncCalm();
+      requestAnimationFrame(onResize);
+    });
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", onResize);
     schedule();
@@ -267,6 +293,8 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       window.removeEventListener("hashchange", openFromHash);
       document.removeEventListener("focusin", onFocus);
       window.removeEventListener("scroll", schedule);
+      window.removeEventListener("scroll", moving);
+      clearInterval(idle);
       window.removeEventListener("resize", onResize);
       intents.forEach((name) => window.removeEventListener(name, moved));
     };
@@ -360,17 +388,13 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
               </span>
             </button>
           )}
-          {registration && (
-            <a
-              className="header-cta"
-              href={registration}
-              tabIndex={pastHero ? 0 : -1}
-              aria-hidden={!pastHero}
-              onClick={() => track("registration_click", { desde: "header" })}
-            >
-              Anotarme <Arrow direction="up-right" />
-            </a>
-          )}
+          <RegistrationLink
+            from="header"
+            className="header-cta"
+            hidden={!pastHero}
+          >
+            Anotarme <Arrow direction="up-right" />
+          </RegistrationLink>
         </div>
         <span className="page-progress" aria-hidden="true" />
       </header>

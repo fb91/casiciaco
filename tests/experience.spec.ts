@@ -64,6 +64,35 @@ test("the story starts only with «Tocá para empezar», which also turns the so
     .toBeLessThan(5);
 });
 
+test("a nudge invites to keep scrolling after a few still seconds in the noise", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await startButton(page).click();
+  const noise = page.locator("#ruido");
+  await expect(noise).not.toHaveAttribute("data-idle");
+  await expect(noise).toHaveAttribute("data-idle", "", { timeout: 6000 });
+  await expect(page.locator(".scroll-nudge")).toBeVisible();
+  await page.mouse.wheel(0, 300);
+  await expect(noise).not.toHaveAttribute("data-idle");
+});
+
+test("the end of the page restarts the whole experience", async ({ page }) => {
+  await page.goto("/?de=Juli#compartir");
+  await expect(page.locator("#agustin")).toBeAttached();
+  await page
+    .getByRole("link", { name: "Vivirlo de nuevo desde el principio" })
+    .click();
+  // Back to the still first screen, waiting for «Tocá para empezar».
+  await expect(page).toHaveURL(/\/\?de=Juli$/);
+  await expect(startButton(page)).toBeInViewport();
+  await expect(page.locator("#agustin")).toBeHidden();
+  await expect(page.locator(".sound-toggle")).toHaveCount(0);
+  await page.mouse.wheel(0, 900);
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+});
+
 test("the start button stays on screen on small and landscape phones", async ({
   page,
 }) => {
@@ -201,7 +230,7 @@ test("a floating testimonial opens as a story, and all of them can be browsed li
       name: `${index + 1} de ${testimonials.length}: ${name}`,
     }),
   ).toBeInViewport();
-  await page.keyboard.press("Escape");
+  await dialog.getByRole("button", { name: "Cerrar" }).click();
   await expect(dialog).toBeHidden();
   // The full repository at the end: tap the right side to move on.
   await page.goto("/#historias");
@@ -334,13 +363,20 @@ test("canceling native share opens nothing else", async ({ page }) => {
   await expect(page.getByRole("status")).toHaveText("");
 });
 
-test("the noise grows with the notifications and goes to zero when holding for silence", async ({
+test("the noise grows, fades little by little while holding and gives way to a calm loop", async ({
   page,
 }) => {
   // Record every volume target the soundscape sends to its gain nodes.
   await page.addInitScript(() => {
     const log: number[] = [];
-    (window as unknown as { gains: number[] }).gains = log;
+    const audio = window as unknown as { gains: number[]; oscillators: number };
+    audio.gains = log;
+    audio.oscillators = 0;
+    const oscillator = AudioContext.prototype.createOscillator;
+    AudioContext.prototype.createOscillator = function (this: AudioContext) {
+      audio.oscillators++;
+      return oscillator.call(this);
+    };
     const create = AudioContext.prototype.createGain;
     AudioContext.prototype.createGain = function (this: AudioContext) {
       const node = create.call(this);
@@ -381,22 +417,37 @@ test("the noise grows with the notifications and goes to zero when holding for s
   const ring = page.getByRole("button", { name: retreat.copy.hold });
   const box = (await ring.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  // Holding fades the noise little by little instead of cutting it.
   await page.mouse.down();
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(200);
   await clear();
-  await page.waitForTimeout(800);
-  // Only the master volume may stay up; every sound layer is sent to zero.
-  const whileHolding = (await gains()).filter((value) => value !== 0.9);
-  expect(whileHolding.length).toBeGreaterThan(0);
-  expect(whileHolding.every((value) => value === 0)).toBe(true);
+  await page.waitForTimeout(500);
+  const early = await loudest();
+  await page.waitForTimeout(1600);
+  await clear();
+  await page.waitForTimeout(500);
+  const late = await loudest();
+  expect(early).toBeGreaterThan(0.3);
+  expect(late).toBeGreaterThan(0);
+  expect(late).toBeLessThan(early / 2);
   await expect(page.locator("#agustin")).toBeVisible({ timeout: 6000 });
   await page.mouse.up();
+  // After the silence the noise is gone for good…
   await clear();
+  await page.evaluate(() => {
+    (window as unknown as { oscillators: number }).oscillators = 0;
+  });
   await page.mouse.wheel(0, 1500);
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(2500);
   expect(
     (await gains()).filter((value) => value !== 0.9).every((v) => v === 0),
   ).toBe(true);
+  // …and a slow, quiet loop takes its place.
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { oscillators: number }).oscillators,
+    ),
+  ).toBeGreaterThan(0);
 });
 
 test("the sound button appears after starting and remembers being turned off", async ({
@@ -435,11 +486,30 @@ test("story cards are prerendered 9:16 images for inviting and for going", async
 test("deep links reach the invitation with registration and practical details", async ({
   page,
 }) => {
+  await page
+    .context()
+    .route("https://docs.google.com/**", (route) =>
+      route.fulfill({ contentType: "text/html", body: "Formulario" }),
+    );
   await page.goto("/#invitacion");
   await expect(page.locator("#invitacion")).toBeInViewport();
-  await expect(
-    page.getByRole("link", { name: retreat.copy.cta }),
-  ).toHaveAttribute("href", retreat.registrationUrl!);
+  const cta = page.getByRole("link", { name: retreat.copy.cta });
+  // Without JavaScript the link goes straight to the form.
+  await expect(cta).toHaveAttribute("href", retreat.registrationUrl!);
+  // First a notice that it is a Google Form; it opens in a new tab only on confirming.
+  await cta.click();
+  const notice = page.getByRole("dialog", { name: "¡Qué bueno que te sumes!" });
+  await expect(notice).toBeVisible();
+  await expect(notice).toContainText("formulario de Google");
+  await notice.getByRole("button", { name: "Ahora no" }).click();
+  await expect(notice).toBeHidden();
+  await cta.click();
+  const form = notice.getByRole("link", { name: /Ir al formulario/ });
+  await expect(form).toHaveAttribute("target", "_blank");
+  const popup = page.waitForEvent("popup");
+  await form.click();
+  expect((await popup).url()).toBe(retreat.registrationUrl);
+  await expect(notice).toBeHidden();
   await page.getByText("Lo que necesitás saber").click();
   await expect(page.locator(".practical")).toContainText(
     `De ${retreat.age.min} a ${retreat.age.max} años`,

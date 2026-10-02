@@ -84,7 +84,7 @@ export function HoldToSilence() {
     paint(1);
     live.hold = 0;
     navigator.vibrate?.([18, 80, 18]);
-    soundscape.setLevel(0, true);
+    soundscape.setLevel(0);
     storyState.openSilence();
     track(skipped ? "silence_skip" : "silence_complete");
     setTimeout(() => reply.current?.focus({ preventScroll: true }), 60);
@@ -93,8 +93,7 @@ export function HoldToSilence() {
     if (silenced || held.current) return;
     held.current = true;
     setHolding(true);
-    // Real silence from the first instant of holding.
-    soundscape.setLevel(0, true);
+    // The noise fades as the ring fills (see the runtime), reaching zero at the end.
     navigator.vibrate?.(12);
     const from = timer.current.value;
     timer.current.start = performance.now() - from * holdDuration;
@@ -266,6 +265,38 @@ export function StartButton() {
   );
 }
 
+/**
+ * Back to the very beginning: the still first screen, the noise, the silence… everything
+ * again. A fresh load is the simplest way to reset every scene and the sound.
+ */
+export function RestartButton() {
+  return (
+    <a
+      className="restart-button"
+      href="#inicio"
+      onClick={(event) => {
+        event.preventDefault();
+        track("restart");
+        storyState.reset();
+        scrollTo({ top: 0, behavior: "instant" });
+        location.replace(location.pathname + location.search);
+      }}
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path
+          d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4h4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      Vivirlo de nuevo desde el principio
+    </a>
+  );
+}
+
 export function Choice() {
   const selected = useStory((state) => state.choice);
   return (
@@ -360,6 +391,79 @@ function baseUrl() {
   return url;
 }
 
+/**
+ * «Anotarme» and «Quiero anotarme»: first a short notice that the registration is a Google
+ * Form, which then opens in a new tab. Without JavaScript the link goes straight to it.
+ */
+export function RegistrationLink({
+  from,
+  className,
+  hidden = false,
+  children,
+}: {
+  from: "header" | "invitacion";
+  className: string;
+  hidden?: boolean;
+  children: ReactNode;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const url = publicUrl(retreat.registrationUrl);
+  if (!url) return null;
+  return (
+    <>
+      <a
+        className={className}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-haspopup="dialog"
+        tabIndex={hidden ? -1 : undefined}
+        aria-hidden={hidden || undefined}
+        onClick={(event) => {
+          event.preventDefault();
+          dialog.current?.showModal();
+          track("registration_open", { desde: from });
+        }}
+      >
+        {children}
+      </a>
+      <InfoDialog
+        dialogRef={dialog}
+        id={"inscripcion-" + from}
+        title="¡Qué bueno que te sumes!"
+      >
+        <p>
+          Para anotarte vas a completar tus datos en un formulario de Google. Se
+          abre en una pestaña nueva y, cuando termines, podés volver acá.
+        </p>
+        <div className="dialog-actions">
+          <a
+            className="button-primary"
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => {
+              track("registration_click", { desde: from });
+              dialog.current?.close();
+            }}
+          >
+            Ir al formulario
+            <Arrow direction="up-right" />
+          </a>
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => dialog.current?.close()}
+          >
+            Ahora no
+          </button>
+        </div>
+        <p className="dialog-note">docs.google.com/forms</p>
+      </InfoDialog>
+    </>
+  );
+}
+
 export function InvitationActions() {
   const registration = publicUrl(retreat.registrationUrl);
   const contact = publicUrl(retreat.contactUrl);
@@ -367,14 +471,10 @@ export function InvitationActions() {
   return (
     <div className="invitation-actions">
       {registration ? (
-        <a
-          className="button-primary"
-          href={registration}
-          onClick={() => track("registration_click", { desde: "invitacion" })}
-        >
+        <RegistrationLink from="invitacion" className="button-primary">
           {copy.cta}
           <Arrow direction="up-right" />
-        </a>
+        </RegistrationLink>
       ) : (
         <>
           <button

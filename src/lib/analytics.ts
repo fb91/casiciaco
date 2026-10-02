@@ -17,6 +17,7 @@ export function normalizeOrigin(value: string | null): Origin {
 }
 export type SmartEvent =
   | "start"
+  | "restart"
   | "scene_view"
   | "silence_complete"
   | "silence_skip"
@@ -24,6 +25,7 @@ export type SmartEvent =
   | "sound_on"
   | "sound_off"
   | "copy_message"
+  | "registration_open"
   | "registration_click"
   | "registration_info"
   | "share_open"
