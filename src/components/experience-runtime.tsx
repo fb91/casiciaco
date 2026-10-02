@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { publicUrl, retreat } from "@/config/retreat";
 import { track } from "@/lib/analytics";
@@ -17,6 +18,7 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
   const stage = useRef<HTMLElement>(null);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [pastHero, setPastHero] = useState(false);
+  const started = useStory((state) => state.started);
   const sound = useStory((state) => state.sound);
   const audible = useStory((state) => state.audible);
   const registration = publicUrl(retreat.registrationUrl);
@@ -30,11 +32,10 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
     const marquees = [...root.querySelectorAll<HTMLElement>("[data-marquee]")];
     const noise = root.querySelector<HTMLElement>("#ruido");
     const silence = root.querySelector<HTMLElement>("#silencio");
-    const heart = root.querySelector<HTMLElement>("[data-heart]");
-    const heartScene = root.querySelector<HTMLElement>("#corazon");
-    const timeline = root.querySelector<HTMLElement>("[data-timeline]");
-    const notifications =
-      noise?.querySelectorAll("[data-notification]").length ?? 0;
+    // Scroll progress at which each notification arrives.
+    const arrivals = [
+      ...(noise?.querySelectorAll<HTMLElement>("[data-notification]") ?? []),
+    ].map((element) => Number(element.dataset.at));
     const visible = new Set<Element>();
     let frame = 0;
     let lastY = scrollY;
@@ -42,19 +43,13 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
     let velocity = 0;
     let offsets = marquees.map(() => 0);
     let shown = 0;
-    let beatPhase = 0;
     let lastTheme = "";
     let lastPast = false;
 
+    // Until «Tocá para empezar» the page stays at the very top.
+    if (!storyState.get().started && !location.hash) scrollTo(0, 0);
+
     const measure = () => {
-      if (timeline) {
-        const track = timeline.querySelector<HTMLElement>("[data-track]");
-        if (track)
-          timeline.style.setProperty(
-            "--dist",
-            Math.max(0, track.scrollWidth - innerWidth) + "px",
-          );
-      }
       offsets = marquees.map(() => 0);
     };
 
@@ -91,7 +86,11 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
         const rect = element.getBoundingClientRect();
         return rect.top <= 36 && rect.bottom > 36;
       });
-      const nextTheme = probe?.dataset.theme || "light";
+      // The end of the noise turns dark, ready for the silence.
+      const nextTheme =
+        probe === noise && Number(noise?.dataset.p) > 0.74
+          ? "dark"
+          : probe?.dataset.theme || "light";
       if (nextTheme !== lastTheme) {
         lastTheme = nextTheme;
         setTheme(nextTheme as "light" | "dark");
@@ -120,7 +119,7 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       if (noise) {
         const p = Number(noise.dataset.p || 0);
         noise.style.setProperty("--v", clamp(velocity / 3).toFixed(3));
-        const count = Math.floor(p * (notifications + 1.5));
+        const count = arrivals.filter((at) => p >= at).length;
         if (count > shown && visible.has(noise)) soundscape.ping();
         shown = count;
         // Louder, brighter and buzzier as the notifications pile up (and when scrolling fast).
@@ -137,22 +136,8 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       if (state.silenced || live.hold > 0) soundscape.setLevel(0, true);
       else soundscape.setLevel(noiseLevel);
 
-      // Restless heart that slows down as the quote completes.
-      if (heart && heartScene && visible.has(heartScene)) {
-        const p = Number(heartScene.dataset.p || 0);
-        const bpm = 118 - 66 * p;
-        beatPhase += (bpm / 60) * dt;
-        if (beatPhase >= 1) beatPhase -= 1;
-        // "Lub-dub": a strong beat followed by a softer echo.
-        const echo =
-          beatPhase > 0.2 ? 0.6 * Math.exp(-(beatPhase - 0.2) * 11) : 0;
-        const pulse = reduced ? 0 : Math.exp(-beatPhase * 9) + echo;
-        heart.style.setProperty("--beat", pulse.toFixed(3));
-      }
-
       const animating =
         (!reduced && marquees.some((marquee) => visible.has(marquee))) ||
-        (heartScene && visible.has(heartScene)) ||
         (silence && visible.has(silence)) ||
         velocity > 0.01;
       if (animating) frame = requestAnimationFrame(tick);
@@ -174,19 +159,22 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       },
       { rootMargin: "10% 0px" },
     );
-    [...marquees, noise, silence, heartScene].forEach(
+    [...marquees, noise, silence].forEach(
       (element) => element && observer.observe(element),
     );
 
-    // Entrance reveals.
+    // Entrance reveals. Elements that enter together appear one after another.
     const reveals = new IntersectionObserver(
-      (entries) =>
+      (entries) => {
+        let order = 0;
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-in");
-            reveals.unobserve(entry.target);
-          }
-        }),
+          if (!entry.isIntersecting) return;
+          const element = entry.target as HTMLElement;
+          element.style.setProperty("--d", order++ * 110 + "ms");
+          element.classList.add("is-in");
+          reveals.unobserve(element);
+        });
+      },
       { rootMargin: "0px 0px -12% 0px" },
     );
     root
@@ -210,12 +198,13 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       .querySelectorAll("[data-scene]")
       .forEach((element) => scenes.observe(element));
 
-    // Deep links to scenes after the silence open it directly.
+    // Deep links start the story; the ones after the silence open it directly.
     const openFromHash = () => {
       const target =
         location.hash.length > 1
           ? document.getElementById(location.hash.slice(1))
           : null;
+      if (target && target.id !== "inicio") storyState.start();
       if (target?.closest(".after-silence") && !storyState.get().silenced) {
         storyState.openSilence();
         requestAnimationFrame(() =>
@@ -238,6 +227,18 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
         .getElementById(location.hash.slice(1))
         ?.scrollIntoView({ behavior: "instant" });
     };
+    // Keyboard users who tab past the start button start the story too.
+    const onFocus = (event: FocusEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        !storyState.get().started &&
+        target?.closest?.("main") &&
+        !target.closest("#inicio")
+      )
+        storyState.start();
+    };
+    document.addEventListener("focusin", onFocus);
+
     const intents = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
     intents.forEach((name) =>
       window.addEventListener(name, moved, { passive: true, once: true }),
@@ -264,18 +265,21 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
       scenes.disconnect();
       unsubscribe();
       window.removeEventListener("hashchange", openFromHash);
+      document.removeEventListener("focusin", onFocus);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", onResize);
       intents.forEach((name) => window.removeEventListener(name, moved));
     };
   }, []);
 
-  // Sound starts on: browsers only let it play after the first tap or key press,
-  // so every such gesture unlocks it until it is actually audible.
+  // «Tocá para empezar» turns the sound on. Browsers only let it play after a tap or key
+  // press, so a visitor who already started (e.g. after reloading) unlocks it with the
+  // next gesture.
   useEffect(() => {
     soundscape.listen((running) => storyState.setAudible(running));
     const unlock = () => {
-      if (storyState.get().sound && !soundscape.running) soundscape.enable();
+      const { started, sound } = storyState.get();
+      if (started && sound && !soundscape.running) soundscape.enable();
     };
     unlock();
     const events = [
@@ -318,31 +322,44 @@ export function ExperienceRuntime({ children }: { children: ReactNode }) {
         }
       >
         <a className="wordmark" href="#inicio">
-          casiciaco<span>#{retreat.edition}</span>
+          <span className="brand-chip">
+            <Image
+              src="/images/jar-logo.webp"
+              alt={retreat.organization.short}
+              width={720}
+              height={493}
+              sizes="64px"
+              preload
+            />
+          </span>
+          casiciaco<span className="edition">#{retreat.edition}</span>
         </a>
         <div className="header-actions">
-          <button
-            type="button"
-            className={
-              "sound-toggle" + (sound && !audible ? " is-waiting" : "")
-            }
-            aria-pressed={sound}
-            onClick={toggleSound}
-          >
-            <span className="sound-bars" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <i />
-            </span>
-            <span>
-              {!sound
-                ? "Activar sonido"
-                : audible
-                  ? "Sonido"
-                  : "Tocá para escuchar"}
-            </span>
-          </button>
+          {/* Appears once «Tocá para empezar» has turned the sound on. */}
+          {started && (
+            <button
+              type="button"
+              className={
+                "sound-toggle" + (sound && !audible ? " is-waiting" : "")
+              }
+              aria-pressed={sound}
+              onClick={toggleSound}
+            >
+              <span className="sound-bars" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+              <span>
+                {!sound
+                  ? "Activar sonido"
+                  : audible
+                    ? "Sonido"
+                    : "Tocá para escuchar"}
+              </span>
+            </button>
+          )}
           {registration && (
             <a
               className="header-cta"

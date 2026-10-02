@@ -2,6 +2,21 @@ import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { retreat } from "../src/config/retreat";
 import { cardIds } from "../src/config/share-cards";
+import { testimonials } from "../src/config/testimonials";
+
+const startButton = (page: Page) =>
+  page.getByRole("link", { name: /Tocá para empezar/ });
+/** Scrolls to a point (0..1) of a pinned scene. */
+async function scrollThrough(page: Page, selector: string, progress: number) {
+  await page.locator(selector).evaluate(
+    (el: HTMLElement, progress) =>
+      scrollTo({
+        top: el.offsetTop + (el.offsetHeight - innerHeight) * progress,
+        behavior: "instant",
+      }),
+    progress,
+  );
+}
 
 async function holdToSilence(page: Page) {
   await page.locator("#silencio").scrollIntoViewIfNeeded();
@@ -20,32 +35,66 @@ async function axe(page: Page) {
   ).violations;
 }
 
-test("opens directly, scrolls natively and only the silence pauses the story", async ({
+test("the story starts only with «Tocá para empezar», which also turns the sound on", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "buscando",
+  );
+  await expect(startButton(page)).toBeInViewport();
+  // Nothing scrolls and there is no sound button until the visitor starts.
+  await page.mouse.wheel(0, 900);
+  await page.keyboard.press("PageDown");
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+  await expect(page.locator(".sound-toggle")).toHaveCount(0);
+  await startButton(page).click();
+  await expect(page.locator(".sound-toggle")).toHaveText(/^Sonido$/);
+  await expect(page.locator(".sound-toggle")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect
+    .poll(() =>
+      page
+        .locator("#ruido")
+        .evaluate((el: HTMLElement) => Math.abs(el.offsetTop - scrollY)),
+    )
+    .toBeLessThan(5);
+});
+
+test("the start button stays on screen on small and landscape phones", async ({
+  page,
+}) => {
+  for (const viewport of [
+    { width: 320, height: 568 },
+    { width: 360, height: 640 },
+    { width: 844, height: 390 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+    await expect(startButton(page)).toBeInViewport({ ratio: 1 });
+  }
+});
+
+test("scrolls natively after starting and only the silence pauses the story", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/?ref=colegio");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "buscando",
-  );
   await expect(page.locator(".preview-gate")).toHaveCount(0);
   // The scenes after the silence are not reachable yet.
   await expect(page.locator("#agustin")).toBeHidden();
-  await page.mouse.wheel(0, 900);
+  await startButton(page).click();
   await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(300);
   await expect(page.locator(".header-cta")).toHaveAttribute(
     "href",
     retreat.registrationUrl!,
   );
-  // Notifications pile up while scrolling through the noise.
-  const noise = page.locator("#ruido");
-  await noise.evaluate((el: HTMLElement) =>
-    scrollTo({
-      top: el.offsetTop + el.offsetHeight - innerHeight,
-      behavior: "instant",
-    }),
-  );
+  // Notifications pile up while scrolling through the noise…
+  await scrollThrough(page, "#ruido", 0.66);
   await expect
     .poll(() =>
       page
@@ -54,25 +103,53 @@ test("opens directly, scrolls natively and only the silence pauses the story", a
         .evaluate((el) => Number(getComputedStyle(el).opacity)),
     )
     .toBeGreaterThan(0.9);
-  // A quick tap is not enough.
+  // …and then everything goes, so the last line can be read on its own.
+  await scrollThrough(page, "#ruido", 1);
+  await expect
+    .poll(() =>
+      page
+        .locator(".notifications")
+        .evaluate((el) => Number(getComputedStyle(el).opacity)),
+    )
+    .toBeLessThan(0.05);
+  await expect(page.locator(".noise-end em")).toHaveText(
+    retreat.copy.noiseEnd.emphasis,
+  );
+  await expect
+    .poll(() =>
+      page
+        .locator(".noise-end em")
+        .evaluate((el) => Number(getComputedStyle(el).opacity)),
+    )
+    .toBeGreaterThan(0.9);
+  // The silence asks its questions; a quick tap is not enough.
   await page.locator("#silencio").scrollIntoViewIfNeeded();
+  for (const question of retreat.copy.questions)
+    await expect(page.locator(".silence-questions")).toContainText(question);
   await page.getByRole("button", { name: retreat.copy.hold }).click();
   await page.waitForTimeout(400);
   await expect(page.locator("#agustin")).toBeHidden();
   await holdToSilence(page);
-  await expect(page.locator(".pause-line")).toBeVisible();
-  await expect(page.locator(".pause-line")).toBeFocused();
+  await expect(page.locator(".silence-reply")).toBeVisible();
+  await expect(page.locator(".silence-reply")).toBeFocused();
+  await expect(page.locator(".silence-reply")).toContainText(
+    retreat.copy.missing.lead,
+  );
   for (const id of [
     "agustin",
-    "historia",
-    "corazon",
     "vos",
     "tres-dias",
+    "secreto",
     "jesus",
+    "conocerlo",
     "dudas",
     "invitacion",
+    "compartir",
+    "historias",
   ])
     await expect(page.locator("#" + id)).toBeAttached();
+  // The timeline and the quote are gone.
+  await expect(page.locator("#historia, #corazon")).toHaveCount(0);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -96,43 +173,61 @@ test("the silence can be held with the keyboard or skipped", async ({
   await page.goto("/");
   await page.reload();
   await expect(page.locator("#agustin")).toBeHidden();
+  await startButton(page).click();
   await page.getByRole("button", { name: "Seguir sin esperar" }).click();
   await expect(page.locator("#agustin")).toBeVisible();
 });
 
-test("the timeline moves sideways with the vertical scroll", async ({
+test("a floating testimonial opens as a story, and all of them can be browsed like stories", async ({
   page,
 }) => {
-  await page.goto("/#historia");
-  const timeline = page.locator("#historia");
-  await expect(timeline).toBeVisible();
-  // The runtime has measured the track once it reports progress.
-  await expect(timeline).toHaveAttribute("data-p", /\d/);
-  await expect(timeline).toHaveCSS("--dist", /px$/);
-  const track = page.locator(".timeline-track");
-  const x = () => track.evaluate((el) => el.getBoundingClientRect().x);
-  await timeline.evaluate((el: HTMLElement) =>
-    scrollTo({
-      top: scrollY + el.getBoundingClientRect().top,
-      behavior: "instant",
+  await page.goto("/#invitacion");
+  // A chat bubble with someone who already went, next to the registration button.
+  // It only rotates while on screen.
+  await page.locator(".bubble-zone").scrollIntoViewIfNeeded();
+  const bubble = page.locator(".bubble");
+  await expect(bubble).toBeVisible({ timeout: 6000 });
+  // Hovering pauses the rotation; the bubble keeps floating, so the click is forced.
+  await bubble.hover({ force: true });
+  const name = (await bubble.locator("strong").textContent())!;
+  expect(testimonials.map((item) => item.name)).toContain(name);
+  await bubble.click({ force: true });
+  const dialog = page.getByRole("dialog", { name: "Testimonios" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator(".stories-head strong")).toHaveText(name);
+  const index = testimonials.findIndex((item) => item.name === name);
+  await expect(
+    dialog.getByRole("group", {
+      name: `${index + 1} de ${testimonials.length}: ${name}`,
     }),
+  ).toBeInViewport();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  // The full repository at the end: tap the right side to move on.
+  await page.goto("/#historias");
+  const stories = page.locator("#historias .stories");
+  await expect(stories.locator(".story")).toHaveCount(testimonials.length);
+  await stories.scrollIntoViewIfNeeded();
+  await expect(stories.locator(".stories-head strong")).toHaveText(
+    testimonials[0].name,
   );
-  const progress = async () => Number(await timeline.getAttribute("data-p"));
-  // Wait for the runtime to apply each scroll position before measuring.
-  await expect.poll(progress).toBeLessThan(0.3);
-  const startProgress = await progress();
-  const start = await x();
-  await timeline.evaluate((el: HTMLElement) =>
-    scrollTo({
-      top:
-        scrollY +
-        el.getBoundingClientRect().top +
-        (el.offsetHeight - innerHeight) * 0.8,
-      behavior: "instant",
-    }),
+  await stories
+    .getByRole("button", { name: "Testimonio siguiente" })
+    .first()
+    .click();
+  await expect(stories.locator(".stories-head strong")).toHaveText(
+    testimonials[1].name,
   );
-  await expect.poll(progress).toBeGreaterThan(startProgress + 0.4);
-  expect(await x()).toBeLessThan(start - 100);
+  await stories
+    .getByRole("button", { name: "Testimonio anterior" })
+    .first()
+    .click();
+  await expect(stories.locator(".stories-head strong")).toHaveText(
+    testimonials[0].name,
+  );
+  // Placeholders say so.
+  if (testimonials[0].placeholder)
+    await expect(stories.locator(".stories-head .example-badge")).toBeVisible();
 });
 
 test("the choice is optional, reversible and shapes the invitation", async ({
@@ -267,8 +362,11 @@ test("the noise grows with the notifications and goes to zero when holding for s
   const loudest = async () =>
     Math.max(0, ...(await gains()).filter((value) => value !== 0.9));
   await page.goto("/");
-  await page.locator(".hero-title").click();
+  await startButton(page).click();
   await expect(page.locator(".sound-toggle")).toHaveText(/^Sonido$/);
+  // Calm at the start of the noise, once the glide down has finished.
+  await page.waitForTimeout(1500);
+  await clear();
   await page.waitForTimeout(300);
   const calmStart = await loudest();
   await clear();
@@ -301,14 +399,13 @@ test("the noise grows with the notifications and goes to zero when holding for s
   ).toBe(true);
 });
 
-test("sound starts on, plays after the first gesture and remembers being turned off", async ({
+test("the sound button appears after starting and remembers being turned off", async ({
   page,
 }) => {
   await page.goto("/");
   const toggle = page.locator(".sound-toggle");
-  await expect(toggle).toHaveAttribute("aria-pressed", "true");
-  // "Tocá para empezar" starts the story and the sound with the same tap.
-  await page.getByRole("link", { name: /Tocá para empezar/ }).click();
+  await expect(toggle).toHaveCount(0);
+  await startButton(page).click();
   await expect(toggle).toHaveText(/^Sonido$/);
   await expect(page.locator("#ruido")).toBeInViewport();
   await toggle.click();
@@ -316,6 +413,9 @@ test("sound starts on, plays after the first gesture and remembers being turned 
   await expect(toggle).toHaveText("Activar sonido");
   await page.reload();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  // «Tocá para empezar» turns it on again.
+  await startButton(page).click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
 });
 
 test("story cards are prerendered 9:16 images for inviting and for going", async ({
@@ -352,13 +452,16 @@ test("reduced motion keeps the whole story accessible without scroll-driven moti
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   expect(await axe(page)).toEqual([]);
+  await startButton(page).click();
   await page.getByRole("button", { name: "Seguir sin esperar" }).click();
   await expect(page.locator("#agustin")).toBeVisible();
+  // The noise is read at once: notifications and its last line.
+  await expect(page.locator(".noise-end")).toBeVisible();
   expect(
     await page
-      .locator(".timeline-track")
-      .evaluate((el) => getComputedStyle(el).transform),
-  ).toBe("none");
+      .locator(".notifications")
+      .evaluate((el) => getComputedStyle(el).opacity),
+  ).toBe("1");
   expect(
     await page
       .locator(".noise-content")
@@ -379,8 +482,12 @@ test("without JavaScript the full story and practical information remain readabl
   await page.goto("http://127.0.0.1:3000");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.locator("#agustin")).toBeVisible();
-  await expect(page.locator(".pause-line")).toBeVisible();
+  await expect(page.locator(".noise-end")).toBeVisible();
+  await expect(page.locator(".silence-reply")).toBeVisible();
   await expect(page.locator(".hold-ring")).toBeHidden();
+  // Nothing locks the page without JavaScript.
+  await page.mouse.wheel(0, 900);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(300);
   await page.locator(".practical summary").click();
   await expect(page.locator(".practical")).toContainText(
     `De ${retreat.age.min} a ${retreat.age.max} años`,

@@ -1,11 +1,12 @@
 import { ImageResponse } from "next/og";
 import { retreat } from "@/config/retreat";
-import { cardFonts, palette } from "@/lib/cards";
+import { cardFonts, jarLogo, LogoChip, palette } from "@/lib/cards";
 
 export const alt = `CASICIACO #${retreat.edition} — ¿Qué estás buscando? Retiro para jóvenes, 13 al 15 de noviembre en Rosario`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export default async function Image() {
+  const logo = await jarLogo();
   return new ImageResponse(
     <div
       style={{
@@ -24,10 +25,14 @@ export default async function Image() {
         style={{
           display: "flex",
           justifyContent: "space-between",
+          alignItems: "center",
           fontSize: 28,
         }}
       >
-        <span>casiciaco #{retreat.edition}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <LogoChip src={logo} height={64} />
+          <span>casiciaco #{retreat.edition}</span>
+        </div>
         <span>RETIRO CATÓLICO JUVENIL · ROSARIO</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>

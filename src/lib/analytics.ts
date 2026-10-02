@@ -16,6 +16,7 @@ export function normalizeOrigin(value: string | null): Origin {
     : "directo";
 }
 export type SmartEvent =
+  | "start"
   | "scene_view"
   | "silence_complete"
   | "silence_skip"
@@ -30,6 +31,7 @@ export type SmartEvent =
   | "share_whatsapp"
   | "copy_link"
   | "story_card"
+  | "testimonial_open"
   | "testimonial_play"
   | "testimonial_complete";
 

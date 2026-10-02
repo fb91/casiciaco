@@ -43,6 +43,35 @@ export async function cardFonts() {
     },
   ];
 }
+/** JAR logo as a data URI: it always goes on a white chip. */
+export async function jarLogo() {
+  const png = await readFile(join(process.cwd(), "public/images/jar-logo.png"));
+  return `data:image/png;base64,${png.toString("base64")}`;
+}
+/** White chip with the JAR logo (480 × 329 source). */
+export function LogoChip({ src, height }: { src: string; height: number }) {
+  const padding = Math.round(height * 0.16);
+  const inner = height - padding * 2;
+  return (
+    <div
+      style={{
+        display: "flex",
+        padding: `${padding}px ${Math.round(padding * 1.3)}px`,
+        borderRadius: Math.round(height * 0.3),
+        background: "#ffffff",
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        height={inner}
+        width={Math.round((inner * 480) / 329)}
+        alt=""
+      />
+    </div>
+  );
+}
+
 export const palette = {
   night: "#0f1c18",
   ink: "#24483e",
@@ -164,9 +193,11 @@ function Footer({
 
 function Frame({
   theme,
+  logo,
   children,
 }: {
   theme: Theme;
+  logo: string;
   children: React.ReactNode;
 }) {
   return (
@@ -187,10 +218,14 @@ function Frame({
         style={{
           display: "flex",
           justifyContent: "space-between",
+          alignItems: "center",
           fontSize: 40,
         }}
       >
-        <span>casiciaco</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
+          <LogoChip src={logo} height={86} />
+          <span>casiciaco</span>
+        </div>
         <span
           style={{
             background: theme.badge || palette.accent,
@@ -215,10 +250,10 @@ export async function StoryCard({ id }: { id: string }) {
       : id === "lugar"
         ? themes.accent
         : themes.night;
-  const code = await qr(theme.color);
+  const [code, logo] = await Promise.all([qr(theme.color), jarLogo()]);
   if (id === "buscando") {
     return (
-      <Frame theme={theme}>
+      <Frame theme={theme} logo={logo}>
         <div
           style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}
         >
@@ -250,7 +285,7 @@ export async function StoryCard({ id }: { id: string }) {
   }
   if (id === "scrolleando") {
     return (
-      <Frame theme={theme}>
+      <Frame theme={theme} logo={logo}>
         <div
           style={{ display: "flex", flexDirection: "column", lineHeight: 1.02 }}
         >
@@ -276,7 +311,7 @@ export async function StoryCard({ id }: { id: string }) {
   }
   if (id === "lugar") {
     return (
-      <Frame theme={theme}>
+      <Frame theme={theme} logo={logo}>
         <div
           style={{ display: "flex", flexDirection: "column", lineHeight: 0.9 }}
         >
@@ -298,7 +333,7 @@ export async function StoryCard({ id }: { id: string }) {
   const line =
     choice === null ? retreat.copy.storyDefault : retreat.copy.storyBy[choice];
   return (
-    <Frame theme={theme}>
+    <Frame theme={theme} logo={logo}>
       <div style={{ display: "flex", flexDirection: "column" }}>
         <span style={{ fontFamily: "Serif", fontSize: 150, lineHeight: 1 }}>
           Me voy a
