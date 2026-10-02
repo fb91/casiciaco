@@ -4,10 +4,11 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type CSSProperties,
   type ReactNode,
   type RefObject,
 } from "react";
-import { publicUrl, retreat, type Testimonial } from "@/config/retreat";
+import { publicUrl, retreat } from "@/config/retreat";
 import { track, type SmartEvent as SmartEventName } from "@/lib/analytics";
 import { goingCards, inviteCards, type ShareMode } from "@/config/share-cards";
 import { live, storyState, useStory } from "@/lib/story-state";
@@ -15,6 +16,7 @@ import { soundscape } from "@/lib/soundscape";
 import { Arrow } from "./marks";
 
 const copy = retreat.copy;
+type Vars = CSSProperties & Record<`--${string}`, string | number>;
 
 function InfoDialog({
   dialogRef,
@@ -53,7 +55,8 @@ function InfoDialog({
   );
 }
 
-const holdDuration = 2600;
+// Long enough for the three questions to surface one by one while holding.
+const holdDuration = 3600;
 
 /** The one intentional pause: the rest of the story appears after holding still. */
 export function HoldToSilence() {
@@ -61,8 +64,9 @@ export function HoldToSilence() {
   const [holding, setHolding] = useState(false);
   const held = useRef(false);
   const ring = useRef<HTMLButtonElement>(null);
-  const pause = useRef<HTMLParagraphElement>(null);
+  const reply = useRef<HTMLDivElement>(null);
   const timer = useRef({ start: 0, frame: 0, value: 0 });
+  const missing = copy.missing;
 
   useEffect(() => () => cancelAnimationFrame(timer.current.frame), []);
 
@@ -83,7 +87,7 @@ export function HoldToSilence() {
     soundscape.setLevel(0, true);
     storyState.openSilence();
     track(skipped ? "silence_skip" : "silence_complete");
-    setTimeout(() => pause.current?.focus({ preventScroll: true }), 60);
+    setTimeout(() => reply.current?.focus({ preventScroll: true }), 60);
   }
   function start() {
     if (silenced || held.current) return;
@@ -109,7 +113,7 @@ export function HoldToSilence() {
     cancelAnimationFrame(timer.current.frame);
     // Letting go drains the ring: the noise comes back.
     const drain = () => {
-      const value = Math.max(0, timer.current.value - 0.035);
+      const value = Math.max(0, timer.current.value - 0.03);
       paint(value);
       if (value > 0) timer.current.frame = requestAnimationFrame(drain);
     };
@@ -117,19 +121,35 @@ export function HoldToSilence() {
   }
 
   return (
-    <div className={"silence-gate" + (silenced ? " is-open" : "")}>
+    <div
+      className={
+        "silence-gate" +
+        (silenced ? " is-open" : "") +
+        (holding ? " is-holding" : "")
+      }
+    >
       <div className="silence-question" aria-hidden={silenced}>
         <h2 id="silencio-title" className="kinetic">
           {copy.scrolling.map((line) => (
             <span key={line}>{line}</span>
           ))}
         </h2>
+        <ul className="silence-questions">
+          {copy.questions.map((question, index) => (
+            <li key={question} data-reveal style={{ "--i": index } as Vars}>
+              {question}
+            </li>
+          ))}
+        </ul>
         {!silenced && (
           <>
+            <p id="hold-hint" className="hold-hint">
+              {copy.holdHint}
+            </p>
             <button
               ref={ring}
               type="button"
-              className={"hold-ring" + (holding ? " is-holding" : "")}
+              className="hold-ring"
               aria-describedby="hold-hint"
               onPointerDown={(event) => {
                 event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -164,9 +184,6 @@ export function HoldToSilence() {
               </svg>
               <span className="hold-label">{copy.hold}</span>
             </button>
-            <p id="hold-hint" className="hold-hint">
-              {copy.holdHint}
-            </p>
             <button
               type="button"
               className="skip-silence"
@@ -178,10 +195,25 @@ export function HoldToSilence() {
         )}
       </div>
       <div className="silence-answer" aria-hidden={!silenced}>
-        <p ref={pause} className="pause-line" tabIndex={-1}>
-          <span>{copy.pause[0]}</span>
-          <em>{copy.pause[1]}</em>
-        </p>
+        <div ref={reply} className="silence-reply" tabIndex={-1}>
+          <p className="reply-lead">{missing.lead}</p>
+          <ul className="reply-list">
+            {missing.list.map((item, index) => (
+              <li key={item} style={{ "--i": index } as Vars}>
+                <span className="reply-tick" aria-hidden="true" />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <p className="reply-turn">{missing.turn}</p>
+          <p className="reply-question">
+            <em>
+              {missing.question.before}{" "}
+              <span className="reply-blank">{missing.question.blank}</span>
+              {missing.question.after}
+            </em>
+          </p>
+        </div>
         <a className="scroll-cue" href="#agustin" tabIndex={silenced ? 0 : -1}>
           <span>Seguí bajando</span>
           <Arrow />
@@ -192,28 +224,45 @@ export function HoldToSilence() {
 }
 
 /**
- * Hero call to action: starts the story (goes to the noise) and, with the same tap,
- * starts the sound if the browser had not let it play yet.
+ * The only way into the story: unlocks the page, turns the sound on (even if it had been
+ * turned off) and glides down to the noise, all with the same tap.
  */
 export function StartButton() {
+  const [launching, setLaunching] = useState(false);
   return (
-    <a
-      className="start-button"
-      href="#ruido"
-      onClick={() => {
-        const { sound } = storyState.get();
-        if (sound && !soundscape.running) soundscape.enable();
-      }}
-    >
-      <span className="sound-bars" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-        <i />
-      </span>
-      Tocá para empezar
-      <Arrow />
-    </a>
+    <div className={"hero-start" + (launching ? " is-launching" : "")}>
+      <a
+        className="start-button"
+        href="#ruido"
+        onClick={(event) => {
+          event.preventDefault();
+          storyState.start();
+          if (!storyState.get().sound) storyState.setSound(true);
+          const audible = soundscape.enable();
+          track("start", { sonido: audible ? 1 : 0 });
+          setLaunching(true);
+          setTimeout(() => setLaunching(false), 1200);
+          const smooth = !matchMedia("(prefers-reduced-motion: reduce)")
+            .matches;
+          requestAnimationFrame(() =>
+            document
+              .getElementById("ruido")
+              ?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" }),
+          );
+        }}
+      >
+        <span className="start-halo" aria-hidden="true" />
+        <span className="sound-bars" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className="start-label">Tocá para empezar</span>
+        <Arrow />
+      </a>
+      <p className="start-hint">Mejor con sonido 🎧</p>
+    </div>
   );
 }
 
@@ -641,72 +690,5 @@ export function PracticalDetails() {
         </p>
       )}
     </>
-  );
-}
-
-export function TestimonialGallery({ items }: { items: Testimonial[] }) {
-  return (
-    <div className="reels">
-      {items.map((item) => (
-        <TestimonialVideo key={item.id} item={item} />
-      ))}
-    </div>
-  );
-}
-function TestimonialVideo({ item }: { item: Testimonial }) {
-  const video = useRef<HTMLVideoElement>(null);
-  const [near, setNear] = useState(false);
-  useEffect(() => {
-    const element = video.current;
-    if (!element) return;
-    const observer = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setNear(true);
-          else element.pause();
-        }),
-      { rootMargin: "200px" },
-    );
-    const onHidden = () => {
-      if (document.hidden) element.pause();
-    };
-    observer.observe(element);
-    document.addEventListener("visibilitychange", onHidden);
-    return () => {
-      observer.disconnect();
-      document.removeEventListener("visibilitychange", onHidden);
-    };
-  }, []);
-  return (
-    <article className="testimonial">
-      <video
-        ref={video}
-        controls
-        playsInline
-        preload="none"
-        poster={item.poster}
-        src={near ? item.video : undefined}
-        onPlay={() => {
-          document.querySelectorAll("video").forEach((element) => {
-            if (element !== video.current) element.pause();
-          });
-          track("testimonial_play");
-        }}
-        onEnded={() => track("testimonial_complete")}
-      >
-        <track
-          kind="captions"
-          src={item.captions}
-          srcLang="es"
-          label="Español"
-          default
-        />
-      </video>
-      <h3>{item.name}</h3>
-      <details>
-        <summary>Leer transcripción</summary>
-        <p>{item.transcript}</p>
-      </details>
-    </article>
   );
 }

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Fragment, type CSSProperties, type ReactNode } from "react";
-import { retreat, approvedTestimonials } from "@/config/retreat";
+import { retreat } from "@/config/retreat";
 import { ExperienceRuntime } from "@/components/experience-runtime";
 import {
   Choice,
@@ -11,8 +11,11 @@ import {
   PracticalDetails,
   ShareStudio,
   StartButton,
-  TestimonialGallery,
 } from "@/components/interactions";
+import {
+  TestimonialBubble,
+  TestimonialStories,
+} from "@/components/testimonials";
 import { Arrow } from "@/components/marks";
 
 const copy = retreat.copy;
@@ -82,10 +85,11 @@ function Rise({
 }
 
 export function RetreatStory({ inviter }: { inviter: string | null }) {
-  const videos = approvedTestimonials();
   const questions = retreat.questions.filter((question) => question.approved);
   const notifications = copy.notifications;
-  const quoteWords = copy.quote.split(" ");
+  const augustine = copy.augustine;
+  const jesus = copy.jesus;
+  const organization = retreat.organization;
   return (
     <ExperienceRuntime>
       <Scene id="inicio" className="hero">
@@ -119,12 +123,8 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
             {retreat.age.max}. <strong>13—15 de noviembre.</strong>
           </p>
           <Countdown compact />
-          <StartButton />
         </div>
-        <a className="scroll-hint" href="#ruido">
-          <span>Deslizá</span>
-          <Arrow />
-        </a>
+        <StartButton />
       </Scene>
 
       <Scene id="ruido" className="noise" pin>
@@ -150,36 +150,46 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
           className="notifications"
           aria-label="Notificaciones de un día cualquiera"
         >
-          {notifications.map((item, index) => (
-            <li
-              key={item.text}
-              data-notification
-              style={
-                {
-                  "--at": (
-                    (index + 0.6) /
-                    (notifications.length + 1.5)
-                  ).toFixed(3),
-                  // Scattered, newest on top: only the latest one is fully readable.
-                  "--y": (((index * 37) % 100) / 100).toFixed(2),
-                } as Vars
-              }
-            >
-              <strong>{item.app}</strong>
-              <span>{item.text}</span>
-              <small>ahora</small>
-            </li>
-          ))}
+          {notifications.map((item, index) => {
+            // They pile up during the first two thirds of the scene.
+            const at = (0.03 + index * 0.06).toFixed(3);
+            return (
+              <li
+                key={item.text}
+                data-notification
+                data-at={at}
+                style={
+                  {
+                    "--at": at,
+                    // Scattered, newest on top: only the latest one is fully readable.
+                    "--y": (((index * 37) % 100) / 100).toFixed(2),
+                  } as Vars
+                }
+              >
+                <strong>{item.app}</strong>
+                <span>{item.text}</span>
+                <small>ahora</small>
+              </li>
+            );
+          })}
         </ol>
         <div className="noise-content">
           <Tag>ENTRE TANTAS COSAS POR HACER</Tag>
           <h2 id="ruido-title">
             Todo el día <span>a mil.</span>
           </h2>
-          <p className="noise-end">
-            ¿Y en algún momento… <strong>{copy.noiseEnd.toLowerCase()}</strong>?
-          </p>
         </div>
+        {/* Everything else fades away so this can be read. */}
+        <p className="noise-end">
+          {copy.noiseEnd.lines.map((line, index) => (
+            <span key={line} style={{ "--i": index } as Vars}>
+              {line}{" "}
+            </span>
+          ))}
+          <em style={{ "--i": copy.noiseEnd.lines.length } as Vars}>
+            {copy.noiseEnd.emphasis}
+          </em>
+        </p>
       </Scene>
 
       <Scene id="silencio" className="silence" dark>
@@ -188,6 +198,11 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
 
       <div className="after-silence">
         <Scene id="agustin" className="augustine" dark>
+          <p className="augustine-era" data-reveal>
+            <span>{augustine.era.before}</span>{" "}
+            <strong>{augustine.era.number}</strong>{" "}
+            <span>{augustine.era.after}</span>
+          </p>
           <div className="augustine-portrait" data-reveal>
             <Image
               src="/images/saint-augustine-champaigne.webp"
@@ -201,66 +216,26 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
             </p>
           </div>
           <div className="augustine-content">
-            <Tag>ANTES DE SER SANTO</Tag>
-            <Rise id="agustin-title" lines={copy.augustine} className="serif" />
-            <p className="slide-description" data-reveal>
-              Un pibe con preguntas, como vos.
+            <Rise
+              id="agustin-title"
+              lines={augustine.title}
+              className="serif"
+            />
+            <ul className="life-list">
+              {augustine.life.map((line, index) => (
+                <li key={line} data-reveal style={{ "--i": index } as Vars}>
+                  {line}
+                </li>
+              ))}
+            </ul>
+            <p className="augustine-search" data-reveal>
+              {augustine.search[0]} <strong>{augustine.search[1]}</strong>
             </p>
           </div>
-        </Scene>
-
-        <Scene id="historia" className="timeline" dark pin data-timeline>
-          <div className="timeline-head">
-            <Tag>LA BÚSQUEDA DE AGUSTÍN</Tag>
-            <h2 id="historia-title" className="sr-only">
-              La búsqueda de Agustín, del año 354 al 386
-            </h2>
-            <div className="timeline-bar" aria-hidden="true">
-              <span />
-            </div>
-          </div>
-          <ol className="timeline-track" data-track>
-            {retreat.timeline.map((stop, index) => (
-              <li
-                key={stop.title}
-                className={
-                  "stop" +
-                  (index === retreat.timeline.length - 1 ? " stop-final" : "")
-                }
-                style={{ "--i": index } as Vars}
-              >
-                <span className="stop-year">{stop.year}</span>
-                <span className="stop-place">{stop.place}</span>
-                <h3>{stop.title}</h3>
-                <p>{stop.text}</p>
-              </li>
-            ))}
-          </ol>
-        </Scene>
-
-        <Scene id="corazon" className="heart-scene" dark pin>
-          <div className="heart" data-heart aria-hidden="true">
-            <svg viewBox="0 0 100 90">
-              <path d="M50 86 C20 64 4 48 4 28 A22 22 0 0 1 50 16 A22 22 0 0 1 96 28 C96 48 80 64 50 86Z" />
-            </svg>
-          </div>
-          <figure className="quote">
-            <blockquote>
-              <p id="corazon-title">
-                {quoteWords.map((word, index) => (
-                  <span
-                    key={index}
-                    style={
-                      { "--at": (index / quoteWords.length).toFixed(3) } as Vars
-                    }
-                  >
-                    {word}{" "}
-                  </span>
-                ))}
-              </p>
-            </blockquote>
-            <figcaption>{copy.quoteSource}</figcaption>
-          </figure>
+          <p className="augustine-ache" data-reveal>
+            <span>{augustine.ache[0]}</span>
+            <em>{augustine.ache[1]}</em>
+          </p>
         </Scene>
 
         <Scene id="vos" className="choice-scene">
@@ -278,12 +253,15 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
           <div className="days-heading">
             <Tag>ESTO ES CASICIACO</Tag>
             <Rise id="tres-dias-title" lines={copy.room} />
-            <p className="moments" data-reveal>
+            <ul className="room-list" data-reveal>
               {copy.moments.map((moment, index) => (
-                <span key={moment} style={{ "--i": index } as Vars}>
+                <li key={moment} style={{ "--i": index } as Vars}>
                   {moment}
-                </span>
+                </li>
               ))}
+            </ul>
+            <p className="room-god" data-reveal>
+              <span>{copy.roomGod[0]}</span> <em>{copy.roomGod[1]}</em>
             </p>
           </div>
           <ol className="day-cards">
@@ -292,17 +270,27 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
                 key={day}
                 className={"day-card day-" + index}
                 style={{ "--i": index } as Vars}
+                data-reveal
               >
                 <h3 className="day-name">{day}</h3>
                 <span className="day-mystery" aria-hidden="true">
-                  ?
+                  <span className="mystery-ghost">?</span>
+                  <span className="mystery-ghost">?</span>
+                  <span className="mystery-mark">?</span>
                 </span>
               </li>
             ))}
           </ol>
-          <p className="days-teaser" data-reveal>
-            {retreat.daysTeaser}
-          </p>
+        </Scene>
+
+        <Scene id="secreto" className="secret" dark data-progress="flow">
+          <div className="secret-inner">
+            <p className="secret-lead">{copy.secret.lead}</p>
+            <h2 id="secreto-title" className="secret-title">
+              <span>{copy.secret.lines[0]}</span>{" "}
+              <em>{copy.secret.lines[1]}</em>
+            </h2>
+          </div>
         </Scene>
 
         <Scene id="jesus" className="encounter" dark pin>
@@ -317,20 +305,39 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
           </div>
           <div className="encounter-dark" aria-hidden="true" />
           <div className="encounter-content">
-            <Rise id="jesus-title" lines={copy.jesus} className="serif" />
+            <p className="eyebrow encounter-tag">{jesus.tag}</p>
+            <h2 id="jesus-title" className="encounter-title">
+              <span>{jesus.title[0]}</span> <em>{jesus.title[1]}</em>
+            </h2>
             <p className="encounter-hint" aria-hidden="true">
               Seguí deslizando <Arrow />
             </p>
           </div>
         </Scene>
 
-        {videos.length > 0 && (
-          <Scene id="voces" className="voices">
-            <Tag>EN PRIMERA PERSONA</Tag>
-            <Rise id="voces-title" lines={["Ellos ya", "lo vivieron."]} />
-            <TestimonialGallery items={videos} />
-          </Scene>
-        )}
+        <Scene id="conocerlo" className="knowing" dark>
+          <div className="knowing-free">
+            {jesus.free.map((line) => (
+              <p key={line} data-reveal>
+                {line}
+              </p>
+            ))}
+          </div>
+          <ul className="knowing-verbs">
+            {jesus.verbs.map((verb, index) => (
+              <li key={verb} data-reveal style={{ "--i": index } as Vars}>
+                {verb}
+              </li>
+            ))}
+          </ul>
+          <div className="knowing-discover" data-progress="flow">
+            <p id="conocerlo-title">
+              <span>{jesus.discover.before}</span>{" "}
+              <mark>{jesus.discover.emphasis}</mark>{" "}
+              <span>{jesus.discover.after}</span>
+            </p>
+          </div>
+        </Scene>
 
         {questions.length > 0 && (
           <Scene id="dudas" className="doubts">
@@ -375,6 +382,7 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
             <Countdown />
           </div>
           <div className="invitation-details">
+            <TestimonialBubble />
             <InvitationActions />
             <details className="practical">
               <summary>
@@ -398,17 +406,38 @@ export function RetreatStory({ inviter }: { inviter: string | null }) {
             </p>
           </div>
           <ShareStudio />
-          <footer className="invitation-footer">
-            <p>
-              {retreat.organization.name} · {retreat.organization.order}
-              <br />
-              {retreat.organization.parish} · {retreat.organization.city}
-            </p>
-            <a href="#inicio">
-              Volver arriba <Arrow direction="up" />
-            </a>
-          </footer>
         </Scene>
+
+        <Scene id="historias" className="stories-scene" dark>
+          <div className="stories-heading">
+            <Tag>HISTORIAS DE CASICIACO</Tag>
+            <Rise id="historias-title" lines={["Ellos ya", "lo vivieron."]} />
+          </div>
+          <TestimonialStories />
+        </Scene>
+
+        <footer className="site-footer">
+          <Image
+            className="footer-logo"
+            src="/images/jar-logo.webp"
+            alt={`${organization.short} · ${organization.name}`}
+            width={720}
+            height={493}
+            sizes="180px"
+          />
+          <p className="footer-motto">
+            «Una sola alma y un solo corazón hacia Dios»
+            <small>Regla de San Agustín</small>
+          </p>
+          <p className="footer-org">
+            Organiza la <strong>{organization.name}</strong>
+            <br />
+            {organization.order} · {organization.parish} · {organization.city}
+          </p>
+          <a href="#inicio">
+            Volver arriba <Arrow direction="up" />
+          </a>
+        </footer>
       </div>
     </ExperienceRuntime>
   );

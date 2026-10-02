@@ -1,8 +1,10 @@
 "use client";
 import { useSyncExternalStore } from "react";
 
-/** Small client store shared by the story widgets: choice, sound and the silence gate. */
+/** Small client store shared by the story widgets: start, choice, sound and the silence gate. */
 type State = {
+  /** The visitor tapped «Tocá para empezar» (or arrived through a deep link). */
+  started: boolean;
   choice: number | null;
   /** The visitor wants sound (on by default). */
   sound: boolean;
@@ -10,10 +12,12 @@ type State = {
   audible: boolean;
   silenced: boolean;
 };
+const startKey = "casiciaco-inicio";
 const silenceKey = "casiciaco-silencio";
 const choiceKey = "casiciaco-eleccion";
 const soundKey = "casiciaco-sonido";
 let state: State = {
+  started: false,
   choice: null,
   sound: true,
   audible: false,
@@ -50,14 +54,14 @@ function hydrate() {
   if (hydrated || typeof window === "undefined") return;
   hydrated = true;
   const choice = Number(read(choiceKey));
+  const html = document.documentElement.dataset;
   state = {
     ...state,
+    started: read(startKey) === "1" || html.started !== undefined,
     choice:
       read(choiceKey) !== null && choice >= 0 && choice < 3 ? choice : null,
     sound: readLocal(soundKey) !== "0",
-    silenced:
-      read(silenceKey) === "1" ||
-      document.documentElement.dataset.silence === "open",
+    silenced: read(silenceKey) === "1" || html.silence === "open",
   };
 }
 function set(patch: Partial<State>) {
@@ -68,6 +72,15 @@ export const storyState = {
   get: () => {
     hydrate();
     return state;
+  },
+  /** Unlocks the page: until then only «Tocá para empezar» moves the story. */
+  start() {
+    hydrate();
+    write(startKey, "1");
+    document.documentElement.dataset.started = "";
+    // The page was kept at the top until now; from here a reload returns to the same spot.
+    history.scrollRestoration = "auto";
+    if (!state.started) set({ started: true });
   },
   setChoice(choice: number | null) {
     write(choiceKey, choice === null ? null : String(choice));
@@ -86,6 +99,7 @@ export const storyState = {
     if (audible !== state.audible) set({ audible });
   },
   openSilence() {
+    this.start();
     write(silenceKey, "1");
     document.documentElement.dataset.silence = "open";
     set({ silenced: true });
@@ -96,6 +110,7 @@ export const storyState = {
   },
 };
 const serverState: State = {
+  started: false,
   choice: null,
   sound: true,
   audible: false,

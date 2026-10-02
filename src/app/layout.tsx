@@ -38,9 +38,10 @@ export const viewport: Viewport = {
   themeColor: "#0f1c18",
 };
 
-// Runs before first paint: enables the scroll-driven layout (no-JS keeps a plain page) and
-// keeps the silence open for deep links or a visitor who already went through it.
-const boot = `(function(){var d=document.documentElement;d.dataset.enhanced="";try{if(sessionStorage.getItem("casiciaco-silencio")==="1")d.dataset.silence="open"}catch(e){}var h=location.hash.slice(1);if(h&&["inicio","ruido","silencio"].indexOf(h)<0)d.dataset.silence="open"})()`;
+// Runs before first paint: enables the scroll-driven layout (no-JS keeps a plain page),
+// keeps the page still until «Tocá para empezar» (unless the visitor already started or
+// arrives through a deep link) and keeps the silence open for whoever went through it.
+const boot = `(function(){var d=document.documentElement;d.dataset.enhanced="";function r(k){try{return sessionStorage.getItem(k)==="1"}catch(e){return false}}if(r("casiciaco-inicio"))d.dataset.started="";if(r("casiciaco-silencio")){d.dataset.silence="open";d.dataset.started=""}var h=location.hash.slice(1);if(h&&h!=="inicio"){d.dataset.started="";if(["ruido","silencio"].indexOf(h)<0)d.dataset.silence="open"}if(d.dataset.started===undefined)try{history.scrollRestoration="manual"}catch(e){}})()`;
 
 export default function RootLayout({
   children,

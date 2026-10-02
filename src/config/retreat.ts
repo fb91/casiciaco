@@ -1,13 +1,3 @@
-export type Testimonial = {
-  id: string;
-  name: string;
-  video: string;
-  poster: string;
-  captions: string;
-  transcript: string;
-  approved: boolean;
-};
-
 /** Event information and approved content. Null = not supplied; never fabricate logistics. */
 export const retreat = {
   name: "CASICIACO",
@@ -79,43 +69,18 @@ export const retreat = {
       approved: true,
     },
     {
+      question: "¿Por qué se llama Casiciaco?",
+      answer:
+        "En el año 386, poco después de su conversión, Agustín se fue una temporada con su familia y sus amigos a una casa de campo en Casiciaco, cerca de Milán. Ahí rezaban, hacían silencio y charlaban sobre las grandes preguntas de la vida. Este retiro lleva ese nombre.",
+      approved: true,
+    },
+    {
       question: "¿Puedo ir con alguien?",
       answer:
         "¡Obvio! Invitá a quien quieras que tenga entre 16 y 30 años. Cada uno se anota con el formulario.",
       approved: true,
     },
   ],
-  // TODO: upload real videos, authorized names, posters, VTT captions and transcripts.
-  // Prepared slots are deliberately omitted from the public page until complete and approved.
-  testimonials: [
-    {
-      id: "antes-de-ir",
-      name: "",
-      video: "",
-      poster: "",
-      captions: "",
-      transcript: "",
-      approved: false,
-    },
-    {
-      id: "un-momento",
-      name: "",
-      video: "",
-      poster: "",
-      captions: "",
-      transcript: "",
-      approved: false,
-    },
-    {
-      id: "una-invitacion",
-      name: "",
-      video: "",
-      poster: "",
-      captions: "",
-      transcript: "",
-      approved: false,
-    },
-  ] satisfies Testimonial[],
   copy: {
     opening: ["¿Qué estás", "buscando?"],
     noise: [
@@ -141,18 +106,40 @@ export const retreat = {
       { app: "Recordatorio", text: "Empezar el gym (de nuevo)" },
       { app: "WhatsApp", text: "3 audios sin escuchar" },
     ],
-    noiseEnd: "Encontrar tu lugar.",
+    // The noise ends here: everything else fades so this line can be read.
+    noiseEnd: {
+      lines: ["Tanto ruido afuera", "que a veces ni escuchás", "qué pasa"],
+      emphasis: "adentro tuyo.",
+    },
     scrolling: ["Hay preguntas", "que no se responden", "scrolleando."],
-    hold: "Mantené apretado",
-    holdHint: "Hacé silencio unos segundos",
-    pause: ["¿Y si, aun con todo eso,", "seguís buscando?"],
-    augustine: [
-      "Hace más de 1600 años,",
-      "Agustín también",
-      "estaba buscando.",
+    // They surface one by one while holding for silence.
+    questions: [
+      "¿Qué quiero para mi vida?",
+      "¿Por qué hay cosas que no me alcanzan?",
+      "¿Qué estoy buscando de verdad?",
     ],
-    quote: "Nuestro corazón está inquieto hasta que descanse en ti.",
-    quoteSource: "San Agustín · Confesiones I, 1",
+    hold: "Mantené apretado",
+    holdHint: "Hacé silencio unos segundos.",
+    // First words after the silence.
+    missing: {
+      lead: "Capaz está todo bastante bien.",
+      list: ["Tenés amigos.", "Planes.", "Proyectos."],
+      turn: "Y aun así…",
+      question: { before: "¿sentís que falta", blank: "algo", after: "?" },
+    },
+    augustine: {
+      era: { before: "HACE MÁS DE", number: "1600", after: "AÑOS" },
+      title: ["San Agustín también", "estaba buscando."],
+      life: [
+        "Era joven.",
+        "Tenía amigos.",
+        "Se enamoró.",
+        "Quería triunfar.",
+        "Quería ser feliz.",
+      ],
+      search: ["Buscó respuestas en", "un montón de lugares."],
+      ache: ["Y durante años sintió que…", "nada terminaba de alcanzarle."],
+    },
     choice: {
       title: "¿Y vos?",
       question: "¿Qué te gustaría encontrar?",
@@ -167,9 +154,34 @@ export const retreat = {
         "Está bien. No tenés que tener todo resuelto.",
       ],
     },
-    room: ["Tres días", "para hacer lugar."],
-    moments: ["A una charla.", "A otros.", "A tus preguntas."],
-    jesus: ["Conocer", "a Jesús."],
+    room: ["Tres días para", "hacer lugar:"],
+    moments: [
+      "Al silencio.",
+      "A una charla.",
+      "A otros.",
+      "A tus preguntas.",
+      "A vos.",
+    ],
+    roomGod: ["Y también…", "a Dios."],
+    // After the three cards: the weekend is lived, not told.
+    secret: {
+      lead: "Pero no queremos contártelo todo.",
+      lines: ["Hay cosas que se entienden", "recién cuando se viven."],
+    },
+    jesus: {
+      tag: "Y EN EL CENTRO DE TODO…",
+      title: ["Conocer", "a Jesús."],
+      free: [
+        "No necesitás venir sabiendo rezar.",
+        "No tenés que ser «muy de Iglesia».",
+      ],
+      verbs: ["Conocerlo.", "Escucharlo.", "Hablarle.", "Darle un lugar."],
+      discover: {
+        before: "Y descubrir por",
+        emphasis: "vos mismo,",
+        after: "personalmente, quién es.",
+      },
+    },
     description: "Casiciaco es un retiro católico juvenil.",
     invitation: ["Date", "lugar."],
     // Invitation subtitle, story card line and share text follow the visitor's choice.
@@ -188,44 +200,10 @@ export const retreat = {
     cta: "Quiero anotarme",
     share: "¿A quién invitarías?",
   },
-  // Stops of Augustine's search: one short line each, facts from the Confessions.
-  timeline: [
-    {
-      year: "354",
-      place: "Tagaste",
-      title: "Un pibe inquieto.",
-      text: "Curioso, rebelde y con mil preguntas.",
-    },
-    {
-      year: "371",
-      place: "Cartago",
-      title: "Ganas de ser alguien.",
-      text: "Estudia, sale, se enamora. A los 18 es papá.",
-    },
-    {
-      year: "384",
-      place: "Milán",
-      title: "Le va bien. ¿Y?",
-      text: "Por fuera, todo resuelto. Por dentro, el ruido sigue.",
-    },
-    {
-      year: "386",
-      place: "Casiciaco",
-      title: "Paró. Y no fue solo.",
-      text: "Se fue al campo con su familia y amigos. De ahí viene el nombre del retiro.",
-    },
-  ],
   // The weekend is not described on purpose: it is lived, not told.
   days: ["Viernes", "Sábado", "Domingo"],
-  daysTeaser: "Qué pasa cada día no te lo contamos: se vive. Vení con ganas.",
 } as const;
 
-export function approvedTestimonials(): Testimonial[] {
-  return retreat.testimonials.filter(
-    (t) =>
-      t.approved && t.name && t.video && t.poster && t.captions && t.transcript,
-  );
-}
 export function publicUrl(value: string | null): string | null {
   if (!value) return null;
   try {
