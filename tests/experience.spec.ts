@@ -369,13 +369,24 @@ test("the noise grows, fades little by little while holding and gives way to a c
   // Record every volume target the soundscape sends to its gain nodes.
   await page.addInitScript(() => {
     const log: number[] = [];
-    const audio = window as unknown as { gains: number[]; oscillators: number };
+    const audio = window as unknown as {
+      gains: number[];
+      oscillators: number;
+      notes: number[];
+    };
     audio.gains = log;
     audio.oscillators = 0;
+    audio.notes = [];
     const oscillator = AudioContext.prototype.createOscillator;
     AudioContext.prototype.createOscillator = function (this: AudioContext) {
       audio.oscillators++;
-      return oscillator.call(this);
+      const node = oscillator.call(this);
+      const set = node.frequency.setValueAtTime.bind(node.frequency);
+      node.frequency.setValueAtTime = (value: number, at: number) => {
+        audio.notes.push(value);
+        return set(value, at);
+      };
+      return node;
     };
     const create = AudioContext.prototype.createGain;
     AudioContext.prototype.createGain = function (this: AudioContext) {
@@ -432,6 +443,12 @@ test("the noise grows, fades little by little while holding and gives way to a c
   expect(late).toBeLessThan(early / 2);
   await expect(page.locator("#agustin")).toBeVisible({ timeout: 6000 });
   await page.mouse.up();
+  // Holding all the way through ends with a short «done» chime (its top note is D6).
+  expect(
+    await page.evaluate(() =>
+      (window as unknown as { notes: number[] }).notes.includes(1174.66),
+    ),
+  ).toBe(true);
   // After the silence the noise is gone for good…
   await clear();
   await page.evaluate(() => {

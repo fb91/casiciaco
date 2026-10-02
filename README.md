@@ -44,7 +44,7 @@ Cierra un pie blanco con el logo de la JAR, el lema de la Regla de San Agustín 
 
 Para promocionar desde la parroquia, conviene mandar directamente `casiciaco.vercel.app/#compartir`.
 
-Paisaje sonoro generado con Web Audio, sin archivos. Arranca con «Tocá para empezar»: un murmullo que se vuelve más fuerte, brillante y con un zumbido molesto a medida que se apilan las notificaciones (cada una suena con campanita y vibración). Sigue mientras espera el silencio y baja de a poco mientras se mantiene apretado, hasta cero cuando se completa. Después de unos segundos de silencio real entra un loop tranquilo y a poco volumen (acordes suaves en re mayor y algunas campanitas con eco), que se atenúa cuando suena un video de testimonio. El botón de sonido del header aparece recién después de empezar. Quien lo apaga lo mantiene apagado en sus próximas visitas, salvo que vuelva a tocar «Tocá para empezar».
+Paisaje sonoro generado con Web Audio, sin archivos. Arranca con «Tocá para empezar»: un murmullo que se vuelve más fuerte, brillante y con un zumbido molesto a medida que se apilan las notificaciones (cada una suena con campanita y vibración). Sigue mientras espera el silencio y baja de a poco mientras se mantiene apretado, hasta cero cuando se completa, con un «listo» corto (un arpegio ascendente). Después de unos segundos de silencio real entra un loop tranquilo y a poco volumen (acordes suaves en re mayor y algunas campanitas con eco), que se silencia mientras se reproduce un video de testimonio. El botón de sonido del header aparece recién después de empezar. Quien lo apaga lo mantiene apagado en sus próximas visitas, salvo que vuelva a tocar «Tocá para empezar».
 
 `Anotarme` queda fijo en el header después de la portada. Sin JavaScript, todo el relato se lee como una página común y no hay bloqueo. Con movimiento reducido no hay escenas fijadas, cintas en movimiento, ni avance automático de historias.
 
@@ -55,6 +55,16 @@ Paisaje sonoro generado con Web Audio, sin archivos. Arranca con «Tocá para em
 ### Testimonios
 
 `src/config/testimonials.ts` es el repositorio, estático y sin base de datos: todos aparecen en las historias del final y rotan al azar en la burbuja junto a «Quiero anotarme». Cada uno tiene nombre, edad, edición, foto de perfil cuadrada (`avatar`), una frase corta para la burbuja (`teaser`) y es de texto (`kind: "texto"`, con `text`) o un video vertical corto (`kind: "video"`, con `video`, `poster`, `transcript` y, si hay, subtítulos `captions` en WebVTT). Los archivos van en `public/testimonios/`.
+
+**Videos.** Van en `public/testimonios/` y se sirven desde la propia web. Formato recomendado: vertical 9:16, MP4 (H.264 + AAC), 720 × 1280, de 20 a 60 segundos y menos de ~15 MB cada uno (GitHub rechaza archivos de más de 100 MB). Para comprimir un video del celular y sacar su póster:
+
+```sh
+ffmpeg -i original.mov -vf "scale=720:-2" -c:v libx264 -crf 26 -preset slow \
+  -c:a aac -b:a 96k -movflags +faststart public/testimonios/nombre.mp4
+ffmpeg -ss 1 -i public/testimonios/nombre.mp4 -frames:v 1 -q:v 3 public/testimonios/nombre.jpg
+```
+
+Cada reproducción consume transferencia del plan de Vercel: conviene mirar **Usage** en el panel durante la campaña.
 
 Hoy hay **5 ejemplos** (3 videos y 2 textos) con `placeholder: true`: se muestran con la etiqueta «Ejemplo», usan avatares genéricos y videos que dicen «Video de ejemplo». No son testimonios reales: hay que reemplazarlos antes de difundir la página.
 

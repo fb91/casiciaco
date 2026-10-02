@@ -85,6 +85,8 @@ export function HoldToSilence() {
     live.hold = 0;
     navigator.vibrate?.([18, 80, 18]);
     soundscape.setLevel(0);
+    // Holding all the way through earns a short «done» before the calm loop.
+    if (!skipped) soundscape.success();
     storyState.openSilence();
     track(skipped ? "silence_skip" : "silence_complete");
     setTimeout(() => reply.current?.focus({ preventScroll: true }), 60);

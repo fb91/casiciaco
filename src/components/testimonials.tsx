@@ -19,9 +19,9 @@ import { Arrow } from "./marks";
 type Vars = CSSProperties & Record<`--${string}`, string | number>;
 const reducedMotion = () =>
   matchMedia("(prefers-reduced-motion: reduce)").matches;
-/** The calm loop steps aside while a video plays with sound. */
+/** The background goes silent while a video plays, so they never overlap. */
 const duckFor = (video: HTMLVideoElement) =>
-  soundscape.duck(!video.paused && !video.ended && !video.muted);
+  soundscape.duck(!video.paused && !video.ended);
 /** Reading time for a text story: about a third of a second per word. */
 const readingTime = (text: string) =>
   Math.min(18000, Math.max(6500, text.split(/\s+/).length * 330));

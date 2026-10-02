@@ -97,14 +97,17 @@ export const retreat = {
     notifications: [
       { app: "Grupo Facu", text: "¿Rendiste? Mañana es el final 😬" },
       { app: "Mamá", text: "¿Venís a comer el domingo?" },
-      { app: "Laburo", text: "Te cambio el turno del sábado, ¿ok?" },
+      { app: "Juli trabajo", text: "Te cambio el turno del sábado, ¿ok?" },
       { app: "Instagram", text: "A 3 personas les gustó tu historia" },
-      { app: "Banco", text: "Tu resumen ya está disponible" },
+      {
+        app: "Facebook",
+        text: "Hoy es el cumpleaños de Nicolás, ¡envíale un saludo!",
+      },
       { app: "Juli", text: "Che, ¿salimos hoy o qué?" },
       { app: "Calendario", text: "Entregar TP · hoy 23:59" },
       { app: "Grupo Amigos", text: "+47 mensajes" },
       { app: "Recordatorio", text: "Empezar el gym (de nuevo)" },
-      { app: "WhatsApp", text: "3 audios sin escuchar" },
+      { app: "Mecánico WhatsApp", text: "Mensaje de voz (7:50)" },
     ],
     // The noise ends here: everything else fades so this line can be read.
     noiseEnd: {

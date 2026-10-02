@@ -38,7 +38,8 @@ const chords = [
 const bellNotes = [587.33, 659.25, 739.99, 880.0, 987.77]; // D pentatonic
 const chordLength = 8;
 const calmVolume = 0.6;
-const duckedVolume = 0.12;
+/** While a testimonial video plays, the background is silent. */
+const duckedVolume = 0;
 
 function build(): Engine | null {
   const Context =
@@ -290,16 +291,27 @@ export const soundscape = {
     calmOn = value;
     applyCalm();
   },
-  /** Lowers the calm loop while a testimonial video plays with sound. */
+  /** Silences the calm loop while a testimonial video plays. */
   duck(value: boolean) {
     if (value === ducked) return;
     ducked = value;
     if (!engine || !calmOn) return;
+    const now = engine.context.currentTime;
+    // Overrides a fade-in that may still be scheduled.
+    engine.calm.gain.cancelScheduledValues(now);
     engine.calm.gain.setTargetAtTime(
       value ? duckedVolume : calmVolume,
-      engine.context.currentTime,
-      0.5,
+      now,
+      value ? 0.15 : 0.6,
     );
+  },
+  /** A short, bright «done» when the silence is reached: a rising D major arpeggio. */
+  success() {
+    if (!on || !engine) return;
+    [587.33, 880.0, 1174.66].forEach((frequency, index) => {
+      envelope(frequency, 0.11, 0.9 - index * 0.15, "sine", index * 0.075);
+      envelope(frequency * 2, 0.025, 0.5, "triangle", index * 0.075);
+    });
   },
   /** A notification: chime plus a phone buzz, louder as the noise grows. */
   ping() {
