@@ -2649,18 +2649,6 @@ html[data-enhanced] .knowing-verbs li[data-reveal] {
   border-radius: 50%;
   object-fit: cover;
 }
-.example-badge {
-  display: inline-block;
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: #e00b3014;
-  color: #b0001f;
-  font-size: 10px;
-  font-weight: 850;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  vertical-align: middle;
-}
 
 /* ---------- 12 · Stories ---------- */
 .stories-scene {
@@ -2755,10 +2743,6 @@ html[data-enhanced] .knowing-verbs li[data-reveal] {
   display: block;
   font-size: 12px;
   opacity: 0.85;
-}
-.stories-head .example-badge,
-.story-name .example-badge {
-  background: #ffffffe6;
 }
 .stories-controls {
   display: flex;

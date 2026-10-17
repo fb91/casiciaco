@@ -33,11 +33,6 @@ function Avatar({ item, size }: { item: Testimonial; size: number }) {
     </span>
   );
 }
-function ExampleBadge({ item }: { item: Testimonial }) {
-  return item.placeholder ? (
-    <span className="example-badge">Ejemplo</span>
-  ) : null;
-}
 
 /**
  * Instagram-like stories: swipe sideways or tap the left/right side to move, press and
@@ -259,7 +254,7 @@ function Stories({
       <div className="stories-head">
         <Avatar item={item} size={36} />
         <p>
-          <strong>{item.name}</strong> <ExampleBadge item={item} />
+          <strong>{item.name}</strong>
           <small>{testimonialMeta(item)}</small>
         </p>
         <div className="stories-controls">
@@ -359,9 +354,7 @@ function Stories({
             ) : (
               <div className="story-card">
                 <Avatar item={story} size={88} />
-                <p className="story-name">
-                  {story.name} <ExampleBadge item={story} />
-                </p>
+                <p className="story-name">{story.name}</p>
                 <p className="story-meta">{testimonialMeta(story)}</p>
                 <blockquote>
                   <p>{story.text}</p>
@@ -523,7 +516,6 @@ export function TestimonialBubble() {
               <span className="bubble-head">
                 <strong>{item.name}</strong>
                 <small>{testimonialMeta(item)}</small>
-                <ExampleBadge item={item} />
               </span>
               <span className="bubble-teaser">{item.teaser}</span>
             </span>

@@ -16,7 +16,7 @@ type Base = {
   avatar: string;
   /** One line for the floating chat bubble. */
   teaser: string;
-  /** Example content: shown with an «Ejemplo» badge until the real one arrives. */
+  /** Example content, to be replaced by a real one. */
   placeholder: boolean;
 };
 export type Testimonial = Base &
@@ -34,7 +34,7 @@ export type Testimonial = Base &
 const exampleTranscript =
   "Video de ejemplo: acá va el testimonio de alguien que ya vivió Casiciaco.";
 
-export const testimonials: Testimonial[] = [
+const allTestimonials: Testimonial[] = [
   {
     id: "sofi",
     name: "Sofi",
@@ -100,6 +100,11 @@ export const testimonials: Testimonial[] = [
     transcript: exampleTranscript,
   },
 ];
+
+/** Video testimonials are hidden for now: only the text ones are shown. */
+export const testimonials: Testimonial[] = allTestimonials.filter(
+  (item) => item.kind !== "video",
+);
 
 /** «Sofi, 19 · Casiciaco #44», with whatever is known. */
 export function testimonialMeta(item: Testimonial) {

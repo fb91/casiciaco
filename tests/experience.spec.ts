@@ -254,9 +254,6 @@ test("a floating testimonial opens as a story, and all of them can be browsed li
   await expect(stories.locator(".stories-head strong")).toHaveText(
     testimonials[0].name,
   );
-  // Placeholders say so.
-  if (testimonials[0].placeholder)
-    await expect(stories.locator(".stories-head .example-badge")).toBeVisible();
 });
 
 test("the choice is optional, reversible and shapes the invitation", async ({
