@@ -784,13 +784,11 @@ export function PracticalDetails() {
           <dd>{retreat.schedule || "A confirmar por la organización."}</dd>
         </div>
       </dl>
-      {retreat.practicalNotes && (
-        <p className="packing">
-          <strong>Qué llevar</strong>
-          <br />
-          {retreat.practicalNotes}
-        </p>
-      )}
+      <p className="packing">
+        <strong>Qué llevar</strong>
+        <br />
+        {retreat.practicalNotes || "A confirmar por la organización."}
+      </p>
     </>
   );
 }

@@ -20,15 +20,13 @@ export const retreat = {
     parish: "Parroquia Nuestra Señora de Luján",
     city: "Rosario",
   },
-  // Venue and packing list verified in the Google Form linked by the official flyer QR.
+  // Venue verified in the Google Form linked by the official flyer QR.
   venue:
     "Colegio Nuestra Señora de Luján · Av. Perón 3320 Oeste, Rosario, Santa Fe" as
       string | null,
   price: null as string | null,
   schedule: null as string | null,
-  practicalNotes:
-    "Traé ropa cómoda, bolsa de dormir o colchón inflable, elementos de higiene personal, plato, vaso y cubiertos, cartuchera y Biblia." as
-      string | null,
+  practicalNotes: null as string | null,
   // Official form decoded from the QR in instagram.com/p/DdpoV2Qz40q/.
   registrationUrl:
     "https://docs.google.com/forms/d/e/1FAIpQLSeEdv-2l_ax-kgsCZyvjgd_wui_nuxcj775NhAPs7mGkWb5TQ/viewform" as
