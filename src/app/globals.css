@@ -3148,3 +3148,118 @@ html:not([data-enhanced]) .noise-end {
     transform: none;
   }
 }
+
+/* ---------- After the retreat ---------- */
+/* Nothing to unlock here: this page always scrolls. */
+html[data-enhanced]:has(.thanks),
+html[data-enhanced]:has(.thanks) body {
+  overflow: visible;
+  overflow-x: clip;
+  overscroll-behavior: auto;
+}
+.thanks-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: min(86svh, 900px);
+  padding: clamp(72px, 13svh, 140px) var(--gutter) 96px;
+  overflow: hidden;
+  background: var(--sage);
+}
+.thanks-hero-content {
+  position: relative;
+  max-width: 1100px;
+}
+.thanks-title {
+  font-size: clamp(44px, min(12vw, 11svh), 168px);
+  line-height: 0.94;
+  letter-spacing: -0.05em;
+}
+.thanks-lead {
+  max-width: 20em;
+  margin-top: clamp(20px, 4svh, 40px);
+  text-shadow:
+    0 0 18px rgb(var(--paper-rgb)),
+    0 0 6px rgb(var(--paper-rgb));
+  font-size: clamp(19px, 2.2vw, 28px);
+  font-weight: 600;
+  line-height: 1.4;
+  text-wrap: pretty;
+  animation: hero-in 1.2s var(--ease) 0.5s both;
+}
+.thanks-lead .spark {
+  display: inline-block;
+  vertical-align: -0.05em;
+  width: 0.8em;
+  height: 0.8em;
+  margin-right: 0.2em;
+  color: var(--accent-ink);
+}
+.thanks-next {
+  display: grid;
+  gap: 32px;
+  padding: clamp(56px, 9vw, 120px) var(--gutter);
+}
+.thanks-next h2 {
+  font-size: clamp(38px, 6vw, 84px);
+}
+.thanks-next h2 em {
+  color: var(--accent-ink);
+}
+.thanks-next-text p {
+  max-width: 28em;
+  margin-top: 20px;
+  font-size: clamp(17px, 1.6vw, 21px);
+  line-height: 1.6;
+}
+.thanks-parish {
+  display: grid;
+  gap: 6px;
+  padding: clamp(24px, 4vw, 40px);
+  border-radius: 28px;
+  background: var(--sage);
+  font-size: 17px;
+  line-height: 1.5;
+}
+.thanks-parish-name {
+  font-family: var(--font-serif);
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.05;
+  color: var(--night);
+}
+.thanks-parish address {
+  font-style: normal;
+  font-weight: 700;
+}
+.thanks-parish .button-primary {
+  margin-top: 18px;
+}
+.thanks-archive {
+  align-self: start;
+}
+.archive-note {
+  font-weight: 700;
+}
+.back-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+@media (min-width: 900px) {
+  .thanks-next {
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: start;
+    column-gap: clamp(40px, 6vw, 96px);
+  }
+  .thanks-parish {
+    grid-row: span 2;
+  }
+  .thanks-archive {
+    justify-self: start;
+    min-width: 360px;
+  }
+}

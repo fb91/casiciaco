@@ -2,6 +2,10 @@
 
 Experiencia narrativa para el retiro juvenil JAR de la Parroquia Nuestra Señora de Luján, Rosario. **13, 14 y 15 de noviembre de 2026 · 16–30 años**, según el flyer y el formulario oficiales.
 
+## Después del retiro
+
+Cuando termina el último día (`dates.endsAt` en `src/config/retreat.ts`), `/` pasa sola a mostrar «Casiciaco 2026 ya lo vivimos»: agradecimiento, aviso de un próximo retiro sin fecha e invitación a la parroquia. No hace falta volver a desplegar. Los textos están en `after`, en el mismo archivo. La página del retiro queda siempre en `/2026` (con un botón desde la nueva portada) y el estado posterior se puede ver en cualquier momento en `/gracias`.
+
 ## Desarrollo
 
 Node 22.x, igual que en CI y Vercel.
