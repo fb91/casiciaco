@@ -38,7 +38,7 @@ async function axe(page: Page) {
 test("the story starts only with «Tocá para empezar», which also turns the sound on", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/2026");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "buscando",
   );
@@ -67,7 +67,7 @@ test("the story starts only with «Tocá para empezar», which also turns the so
 test("a nudge invites to keep scrolling after a few still seconds in the noise", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/2026");
   await startButton(page).click();
   const noise = page.locator("#ruido");
   await expect(noise).not.toHaveAttribute("data-idle");
@@ -78,13 +78,13 @@ test("a nudge invites to keep scrolling after a few still seconds in the noise",
 });
 
 test("the end of the page restarts the whole experience", async ({ page }) => {
-  await page.goto("/?de=Juli#compartir");
+  await page.goto("/2026?de=Juli#compartir");
   await expect(page.locator("#agustin")).toBeAttached();
   await page
     .getByRole("link", { name: "Vivirlo de nuevo desde el principio" })
     .click();
   // Back to the still first screen, waiting for «Tocá para empezar».
-  await expect(page).toHaveURL(/\/\?de=Juli$/);
+  await expect(page).toHaveURL(/\/2026\?de=Juli$/);
   await expect(startButton(page)).toBeInViewport();
   await expect(page.locator("#agustin")).toBeHidden();
   await expect(page.locator(".sound-toggle")).toHaveCount(0);
@@ -102,7 +102,7 @@ test("the start button stays on screen on small and landscape phones", async ({
     { width: 844, height: 390 },
   ]) {
     await page.setViewportSize(viewport);
-    await page.goto("/");
+    await page.goto("/2026");
     await expect(startButton(page)).toBeInViewport({ ratio: 1 });
   }
 });
@@ -112,7 +112,7 @@ test("scrolls natively after starting and only the silence pauses the story", as
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/?ref=colegio");
+  await page.goto("/2026?ref=colegio");
   await expect(page.locator(".preview-gate")).toHaveCount(0);
   // The scenes after the silence are not reachable yet.
   await expect(page.locator("#agustin")).toBeHidden();
@@ -193,13 +193,13 @@ test("scrolls natively after starting and only the silence pauses the story", as
 test("the silence can be held with the keyboard or skipped", async ({
   page,
 }) => {
-  await page.goto("/#silencio");
+  await page.goto("/2026#silencio");
   await page.getByRole("button", { name: retreat.copy.hold }).focus();
   await page.keyboard.down(" ");
   await expect(page.locator("#agustin")).toBeVisible({ timeout: 6000 });
   await page.keyboard.up(" ");
   await page.evaluate(() => sessionStorage.clear());
-  await page.goto("/");
+  await page.goto("/2026");
   await page.reload();
   await expect(page.locator("#agustin")).toBeHidden();
   await startButton(page).click();
@@ -210,7 +210,7 @@ test("the silence can be held with the keyboard or skipped", async ({
 test("a floating testimonial opens as a story, and all of them can be browsed like stories", async ({
   page,
 }) => {
-  await page.goto("/#invitacion");
+  await page.goto("/2026#invitacion");
   // A chat bubble with someone who already went, next to the registration button.
   // It only rotates while on screen.
   await page.locator(".bubble-zone").scrollIntoViewIfNeeded();
@@ -233,7 +233,7 @@ test("a floating testimonial opens as a story, and all of them can be browsed li
   await dialog.getByRole("button", { name: "Cerrar" }).click();
   await expect(dialog).toBeHidden();
   // The full repository at the end: tap the right side to move on.
-  await page.goto("/#historias");
+  await page.goto("/2026#historias");
   const stories = page.locator("#historias .stories");
   await expect(stories.locator(".story")).toHaveCount(testimonials.length);
   await stories.scrollIntoViewIfNeeded();
@@ -259,7 +259,7 @@ test("a floating testimonial opens as a story, and all of them can be browsed li
 test("the choice is optional, reversible and shapes the invitation", async ({
   page,
 }) => {
-  await page.goto("/#vos");
+  await page.goto("/2026#vos");
   const choice = page.getByRole("button", { name: /Un poco de calma/ });
   await choice.click();
   await expect(choice).toHaveAttribute("aria-pressed", "true");
@@ -286,10 +286,10 @@ test("the choice is optional, reversible and shapes the invitation", async ({
 test("personal invitations greet the friend and sanitize the name", async ({
   page,
 }) => {
-  await page.goto("/?de=Juli%3Cscript%3E");
+  await page.goto("/2026?de=Juli%3Cscript%3E");
   await expect(page.locator(".inviter")).toHaveText(/Juliscript te invita/);
   await expect(page).toHaveTitle(/Juliscript te invita a CASICIACO/);
-  await page.goto("/?de=x");
+  await page.goto("/2026?de=x");
   await expect(page.locator(".inviter")).toHaveCount(0);
 });
 
@@ -312,7 +312,7 @@ test("anyone can share an invitation: story cards, personal link and ready messa
   });
   const copied = () =>
     page.evaluate(() => (window as unknown as { copied: string }).copied);
-  await page.goto("/?ref=colegio&private=do-not-share#compartir");
+  await page.goto("/2026?ref=colegio&private=do-not-share#compartir");
   await expect(page.locator("#compartir")).toBeInViewport();
   // Invitation cards are the default, for people who are not going themselves.
   const cards = page.locator(".card-picker button");
@@ -354,7 +354,7 @@ test("canceling native share opens nothing else", async ({ page }) => {
       configurable: true,
     }),
   );
-  await page.goto("/#compartir");
+  await page.goto("/2026#compartir");
   await page.getByRole("button", { name: "Otras apps" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("status")).toHaveText("");
@@ -405,7 +405,7 @@ test("the noise grows, fades little by little while holding and gives way to a c
   // 0.9 is the master volume; the rest are the noise layers.
   const loudest = async () =>
     Math.max(0, ...(await gains()).filter((value) => value !== 0.9));
-  await page.goto("/");
+  await page.goto("/2026");
   await startButton(page).click();
   await expect(page.locator(".sound-toggle")).toHaveText(/^Sonido$/);
   // Calm at the start of the noise, once the glide down has finished.
@@ -467,7 +467,7 @@ test("the noise grows, fades little by little while holding and gives way to a c
 test("the sound button appears after starting and remembers being turned off", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/2026");
   const toggle = page.locator(".sound-toggle");
   await expect(toggle).toHaveCount(0);
   await startButton(page).click();
@@ -505,7 +505,7 @@ test("deep links reach the invitation with registration and practical details", 
     .route("https://docs.google.com/**", (route) =>
       route.fulfill({ contentType: "text/html", body: "Formulario" }),
     );
-  await page.goto("/#invitacion");
+  await page.goto("/2026#invitacion");
   await expect(page.locator("#invitacion")).toBeInViewport();
   const cta = page.getByRole("link", { name: retreat.copy.cta });
   // Without JavaScript the link goes straight to the form.
@@ -534,7 +534,7 @@ test("reduced motion keeps the whole story accessible without scroll-driven moti
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/2026");
   expect(await axe(page)).toEqual([]);
   await startButton(page).click();
   await page.getByRole("button", { name: "Seguir sin esperar" }).click();
@@ -563,7 +563,7 @@ test("without JavaScript the full story and practical information remain readabl
     viewport: { width: 390, height: 844 },
   });
   const page = await context.newPage();
-  await page.goto("http://127.0.0.1:3000");
+  await page.goto("http://127.0.0.1:3000/2026");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.locator("#agustin")).toBeVisible();
   await expect(page.locator(".noise-end")).toBeVisible();
@@ -589,9 +589,34 @@ test("stays out of search engines until it is marked indexable", async ({
   expect(await (await request.get("/robots.txt")).text()).toContain(
     "Disallow: /",
   );
-  await page.goto("/");
+  await page.goto("/2026");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     /noindex/,
   );
+});
+
+test("after the retreat: thanks, the parish and a way back to the 2026 page", async ({
+  page,
+}) => {
+  await page.goto("/gracias");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "ya lo vivimos",
+  );
+  await expect(page.locator(".thanks")).toContainText(retreat.after.thanks);
+  await expect(page.locator(".thanks-parish")).toContainText(
+    retreat.organization.parishAddress,
+  );
+  // No registration and no dates for the next one.
+  await expect(page.getByText("Quiero anotarme")).toHaveCount(0);
+  // The page scrolls without «Tocá para empezar».
+  await page.mouse.wheel(0, 900);
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(100);
+  expect(await axe(page)).toEqual([]);
+  await page.getByRole("link", { name: retreat.after.archive }).click();
+  await expect(page).toHaveURL(/\/2026$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "buscando",
+  );
+  await expect(startButton(page)).toBeVisible();
 });

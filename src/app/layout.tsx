@@ -52,9 +52,6 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: boot }} />
       </head>
       <body>
-        <a className="skip-link" href="#invitacion">
-          Ir directo a la inscripción
-        </a>
         {children}
         <Analytics />
       </body>

@@ -10,7 +10,8 @@ export const retreat = {
     end: "2026-11-15",
     // Argentina has no DST: 00:00 of the first day in Rosario.
     startsAt: "2026-11-13T00:00:00-03:00",
-    endsAt: "2026-11-15T23:59:59-03:00",
+    // Internal switch only (not shown): from here on «/» is the thanks page.
+    endsAt: "2026-11-15T17:00:00-03:00",
   },
   age: { min: 16, max: 30 },
   organization: {
@@ -19,6 +20,8 @@ export const retreat = {
     order: "Agustinos Recoletos",
     parish: "Parroquia Nuestra Señora de Luján",
     city: "Rosario",
+    parishAddress: "Av. Presidente Perón 3370, Rosario",
+    parishMapUrl: "https://maps.app.goo.gl/SEESE6SayAhp1riMA",
   },
   // Venue verified in the Google Form linked by the official flyer QR.
   venue:
@@ -201,10 +204,26 @@ export const retreat = {
     cta: "Quiero anotarme",
     share: "¿A quién invitarías?",
   },
+  // Shown at «/» once the retreat is over. No dates on purpose: the next one is not set.
+  after: {
+    title: ["Casiciaco 2026", "ya lo vivimos."],
+    thanks:
+      "Gracias de corazón a todos los que formaron parte y abrieron su corazón para vivir este retiro.",
+    nextTitle: ["Va a haber un", "próximo retiro."],
+    next: "Todavía no tiene fecha. Estate atento: cuando se venga, te vamos a avisar.",
+    parishLead: "Mientras tanto, te invitamos a participar en la",
+    archive: "Ver cómo era la página del retiro 2026",
+    archiveNote: "Así era la página del retiro 2026 · Ya lo vivimos",
+    back: "Volver al inicio",
+  },
   // The weekend is not described on purpose: it is lived, not told.
   days: ["Viernes", "Sábado", "Domingo"],
 } as const;
 
+/** True once the last day of the retreat is over (Rosario time). */
+export function retreatEnded(now: number = Date.now()): boolean {
+  return now > Date.parse(retreat.dates.endsAt);
+}
 export function publicUrl(value: string | null): string | null {
   if (!value) return null;
   try {
