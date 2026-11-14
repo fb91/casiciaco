@@ -4,7 +4,7 @@ Experiencia narrativa para el retiro juvenil JAR de la Parroquia Nuestra Señora
 
 ## Después del retiro
 
-Cuando termina el último día (`dates.endsAt` en `src/config/retreat.ts`), `/` pasa sola a mostrar «Casiciaco 2026 ya lo vivimos»: agradecimiento, aviso de un próximo retiro sin fecha e invitación a la parroquia. No hace falta volver a desplegar. Los textos están en `after`, en el mismo archivo. La página del retiro queda siempre en `/2026` (con un botón desde la nueva portada) y el estado posterior se puede ver en cualquier momento en `/gracias`.
+Cuando termina el retiro (`dates.endsAt` en `src/config/retreat.ts`: domingo 15 a las 17 h de Argentina, un dato interno que no se muestra), `/` pasa sola a mostrar «Casiciaco 2026 ya lo vivimos»: agradecimiento, aviso de un próximo retiro sin fecha e invitación a la parroquia. No hace falta volver a desplegar. Los textos están en `after`, en el mismo archivo. La página del retiro queda siempre en `/2026` (con un botón desde la nueva portada) y el estado posterior se puede ver en cualquier momento en `/gracias`.
 
 ## Desarrollo
 

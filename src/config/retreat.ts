@@ -10,7 +10,8 @@ export const retreat = {
     end: "2026-11-15",
     // Argentina has no DST: 00:00 of the first day in Rosario.
     startsAt: "2026-11-13T00:00:00-03:00",
-    endsAt: "2026-11-15T23:59:59-03:00",
+    // Internal switch only (not shown): from here on «/» is the thanks page.
+    endsAt: "2026-11-15T17:00:00-03:00",
   },
   age: { min: 16, max: 30 },
   organization: {
