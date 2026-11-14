@@ -19,10 +19,8 @@ export const retreat = {
     order: "Agustinos Recoletos",
     parish: "Parroquia Nuestra Señora de Luján",
     city: "Rosario",
-    // Same block as the school where the retreat takes place.
-    parishAddress: "Av. Presidente Perón 3320, Rosario",
-    parishMapUrl:
-      "https://www.google.com/maps/search/?api=1&query=Parroquia+Nuestra+Se%C3%B1ora+de+Luj%C3%A1n%2C+Av.+Presidente+Per%C3%B3n+3320%2C+Rosario",
+    parishAddress: "Av. Presidente Perón 3370, Rosario",
+    parishMapUrl: "https://maps.app.goo.gl/SEESE6SayAhp1riMA",
   },
   // Venue verified in the Google Form linked by the official flyer QR.
   venue:
